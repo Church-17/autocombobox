@@ -100,12 +100,10 @@ class AutoCombobox(Combobox):
         elif self._listbox_values:
             self.highlight(0)
 
-    def select(self, option: str | int | None = None):
+    def select(self, option: str | int):
         """Select a value"""
 
         # Check option validity
-        if option == None:
-            option = self._highlighted_index
         if type(option) == int:
             if option >= 0 and option < len(self["values"]):
                 self._selected_str = self._listbox_values[option]
@@ -161,8 +159,8 @@ class AutoCombobox(Combobox):
                 self.show_listbox()
 
         # If clicked on listobox select the option
-        elif event.widget == self._listbox:
-            self.select()
+        elif event.widget == self._listbox and self._highlighted_index >= 0:
+            self.select(self._highlighted_index)
 
     def _window_event(self, event: Event):
         """Handle window events"""
@@ -180,7 +178,7 @@ class AutoCombobox(Combobox):
 
             # Select the highlighted option if is pressed enter
             if event.keysym == "Return" and self._highlighted_index >= 0:
-                self.select()
+                self.select(self._highlighted_index)
                 return
 
             # If arrow pressed, move highlight
