@@ -118,7 +118,7 @@ class AutoCombobox(Combobox):
             else:
                 self._selected_str = option
         else:
-            raise TypeError("Parameter 'option' must be of types 'str', 'int' or 'None'")
+            raise TypeError("Parameter 'option' must be of types 'str' or 'int'")
 
         # If something is highlighted, set Combobox on that value
         self.set(self._selected_str)
