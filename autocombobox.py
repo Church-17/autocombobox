@@ -15,7 +15,6 @@ class AutoCombobox(Combobox):
         # Create Combobox object
         super().__init__(*args)
         self.configure(**kwargs)
-        self.config = self.configure
 
         # Declare dependent variables
         toplevel = self.winfo_toplevel()
@@ -38,26 +37,21 @@ class AutoCombobox(Combobox):
         self._listbox.bind("<Motion>", self._motion_event)  # Handle mouse movement to control highlight
         self._listbox.bind("<Leave>", self._leave_event)    # Handle mouse movement to control highlight
 
-    # Override configure method to always handle options
-    def configure(self, *args, **kwargs):
-
-        if "postcommand" in kwargs:
-            self._old_postcommand = kwargs["postcommand"]
-        else:
-            self._old_postcommand = None
-        kwargs["postcommand"] = self._postcommand
-        return super().configure(*args, **kwargs)
-
     def show_listbox(self):
         """Open the Combobox popdown"""
 
+        # Execute user postcommand if there is one
+        if self._old_postcommand:
+            self._old_postcommand()
+
+        # Show frame & update vars
         self._is_posted = True
         toplevel = self.winfo_toplevel()
         self._frame.place(x=self.winfo_rootx()-toplevel.winfo_rootx(), y=self.winfo_rooty()-toplevel.winfo_rooty()+self.winfo_height())
         self._frame.lift()
 
         # If the current text is an option, reset listbox & select text
-        if self.get().lower() in list(map(lambda s: s.lower(), self["values"])):
+        if self.get().lower() == self._selected_str.lower():
             self.update_values("")
             self.select_range(0, "end")
         else:
@@ -70,6 +64,7 @@ class AutoCombobox(Combobox):
     def hide_listbox(self):
         """Hide the Combobox popdown"""
 
+        # Hide frame
         self._is_posted = False
         self._highlighted_index = -1
         self._frame.place_forget()
@@ -80,8 +75,6 @@ class AutoCombobox(Combobox):
         # Check params
         if text == None:
             text = self.get()
-        if type(text) != str:
-            raise TypeError("Parameter 'text' must be of types 'str' or 'None'")
 
         # Change listbox values
         self._listbox_values = [opt for opt in self["values"] if text.lower() in opt.lower()]
@@ -103,24 +96,11 @@ class AutoCombobox(Combobox):
         elif self._listbox_values:
             self.highlight(0)
 
-    def select(self, option: str | int):
-        """Select a value"""
+    def select(self, option: str):
+        """Select an option"""
 
-        # Check params & update vars
-        if type(option) == int:
-            if option >= 0 and option < len(self["values"]):
-                self._selected_str = self._listbox_values[option]
-            else:
-                raise ValueError("Given index out of values bound")
-        elif type(option) == str:
-            if option not in self["values"]:
-                raise ValueError("Given option not in values")
-            else:
-                self._selected_str = option
-        else:
-            raise TypeError("Parameter 'option' must be of types 'str' or 'int'")
-
-        # If something is highlighted, set Combobox on that value
+        # Set Combobox on the given value
+        self._selected_str = option
         self.set(self._selected_str)
         self.select_range("end", "end")
         self.icursor("end")
@@ -131,21 +111,13 @@ class AutoCombobox(Combobox):
     def highlight(self, index: int):
         """Highlight the option corresponding to the given index"""
 
-        # Check params
-        if type(index) != int or index < 0 or index > self._listbox.size():
-            raise TypeError("Given index must referes to a listbox item")
-
         # Highlight & update vars
         self._highlighted_index = index
         self._listbox.itemconfig(index, {"bg": "#0078d7"})
         self._listbox.itemconfig(index, {"fg": "white"})
 
-    def unhighlight(self, index):
+    def unhighlight(self, index: int):
         """Remove highlight from the option corresponding to the given index"""
-
-        # Check params
-        if type(index) != int or index < 0 or index > self._listbox.size():
-            raise TypeError("Given index must referes to a listbox item")
 
         # Highlight & update vars
         self._highlighted_index = -1
@@ -170,7 +142,7 @@ class AutoCombobox(Combobox):
 
         # If clicked on listobox select the option
         elif event.widget == self._listbox and self._highlighted_index >= 0:
-            self.select(self._highlighted_index)
+            self.select(self._listbox_values[self._highlighted_index])
 
     def _window_event(self, event: Event):
         """Handle window events"""
@@ -189,7 +161,7 @@ class AutoCombobox(Combobox):
 
             # Select the highlighted option if is pressed enter
             if event.keysym == "Return" and self._highlighted_index >= 0:
-                self.select(self._highlighted_index)
+                self.select(self._listbox_values[self._highlighted_index])
                 return
 
             # If arrow pressed, move highlight
@@ -237,12 +209,20 @@ class AutoCombobox(Combobox):
         if self._highlighted_index >= 0 and self._highlighted_index < self._listbox.size():
             self.unhighlight(self._highlighted_index)
 
+    # Override configure method to always handle options
+    def configure(self, *args, **kwargs):
+
+        if "postcommand" in kwargs:
+            self._old_postcommand = kwargs["postcommand"]
+        else:
+            self._old_postcommand = None
+        kwargs["postcommand"] = self._postcommand
+        return super().configure(*args, **kwargs)
+    
+    config = configure
+
     def _postcommand(self):
         """Define new postcommand function to show only the new listbox and not the internal one"""
-        
-        # Execute user postcommand if there is one
-        if self._old_postcommand:
-            self._old_postcommand()
         
         # If the listbox is opened, hide it
         if self._is_posted:
