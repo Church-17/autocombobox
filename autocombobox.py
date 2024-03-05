@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from tkinter import Listbox, Event, Frame
 from tkinter.ttk import Combobox, Scrollbar
 
@@ -13,19 +14,18 @@ class AutoCombobox(Combobox):
         self._is_posted: bool = False
         self._changed_listbox: bool = False
         self._highlighted_index: int = -1
-        self._selected_str: str = None
-        self._old_postcommand = None
-
-        # Define default function for similarity
-        self._simil_func = lambda text, opt: text.lower() in opt.lower()
+        self._selected_str: str | None = None
+        self._old_postcommand: Callable[[], object] | None = None
 
         # Create Combobox object
         super().__init__(*args, postcommand=self._postcommand)
+        if "simil_func" not in kwargs:
+            kwargs["simil_func"] = None
         self.configure(**kwargs)
 
         # Declare dependent variables
         toplevel = self.winfo_toplevel()
-        self._listbox_values: tuple = self["values"]
+        self._listbox_values: tuple[str] = self["values"]
 
         # Create & configure listbox frane
         self._frame = Frame(toplevel, background="white", highlightbackground="grey48", highlightthickness=1)
@@ -73,7 +73,7 @@ class AutoCombobox(Combobox):
 
         # Hide frame
         self._frame.place_forget()
-        self._change_highlight(-1)
+        self.change_highlight(-1)
         self._is_posted = False
 
     def update_values(self, text: str | None = None):
@@ -83,7 +83,7 @@ class AutoCombobox(Combobox):
         if text == None:
             text = self.get()
         elif type(text) != str:
-            raise TypeError("Given text must be a string")
+            text = str(text)
 
         # Change listbox values
         self._listbox_values = [opt for opt in self["values"] if self._simil_func(text, opt)]
@@ -102,34 +102,33 @@ class AutoCombobox(Combobox):
 
         # Highlight selected option if it is in listbox
         if self._selected_str in self._listbox_values:
-            self._change_highlight(self._listbox_values.index(self._selected_str))
+            self.change_highlight(self._listbox_values.index(self._selected_str))
         elif self._listbox_values:
-            self._change_highlight(0)
+            self.change_highlight(0)
 
-    def select(self, option: str | int):
+    def select(self, option: str):
         """Select one of the possible options"""
 
         # Check params
-        if type(option) == str:
-            if option not in self["values"]:
-                raise ValueError("Given option is not a possible values")
-        elif type(option) == int:
-            if option < 0 or option >= len(self["values"]):
-                raise ValueError("Given option index is out of values bound")
-        else:
-            raise TypeError("Parameter 'option' must be an index or a string in the possible option")
+        if type(option) != str:
+            option = str(option)
 
         # Set Combobox on the given value
         self.set(option)
-        self._selected_str = option
-        self.select_range("end", "end")
         self.icursor("end")
         self.hide_listbox()
         self.focus()
-        self.event_generate("<<ComboboxSelected>>")
+        if option in self["values"]:
+            self._selected_str = option
+            self.select_range(0, "end")
+            self.event_generate("<<ComboboxSelected>>")
 
-    def _change_highlight(self, index: int):
+    def change_highlight(self, index: int):
         """Highlight the option corresponding to the given index and remove highlight from the old one"""
+
+        # Check params
+        if type(index) != int:
+            index = int(index)
 
         # Remove highlight
         if self._highlighted_index >= 0 and self._highlighted_index < self._listbox.size():
@@ -187,18 +186,18 @@ class AutoCombobox(Combobox):
             # If arrow pressed, move highlight
             elif event.keysym == "Down":
                 if self._highlighted_index + 1 < self._listbox.size():
-                    self._change_highlight(self._highlighted_index + 1)
+                    self.change_highlight(self._highlighted_index + 1)
             elif event.keysym == "Up":
                 if self._highlighted_index - 1 >= 0:
-                    self._change_highlight(self._highlighted_index - 1)
+                    self.change_highlight(self._highlighted_index - 1)
 
             # If home pressed, highlight first option
             elif event.keysym == "Home":
-                self._change_highlight(0)
+                self.change_highlight(0)
 
             # If end pressed, highlight last option
             elif event.keysym == "End":
-                self._change_highlight(self._listbox.size()-1)
+                self.change_highlight(self._listbox.size()-1)
             
             # Filter options
             else:
@@ -217,14 +216,14 @@ class AutoCombobox(Combobox):
         # Highlight option under mouse and remove highlight from the old one
         index = self._listbox.index(f"@{event.x},{event.y}")
         if self._highlighted_index != index:
-            self._change_highlight(index)
+            self.change_highlight(index)
 
     def _leave_event(self, event: Event):
         """Handel mouse leaving listbox"""
 
         # Remove highlight if listbox is not changed
         if not self._changed_listbox:
-            self._change_highlight(-1)
+            self.change_highlight(-1)
 
     # Override configure method to always handle options
     def configure(self, *args, **kwargs):
@@ -236,7 +235,10 @@ class AutoCombobox(Combobox):
 
         # Handle simil_func parameter
         if "simil_func" in kwargs:
-            self._simil_func = kwargs["simil_func"]
+            if kwargs["simil_func"]:
+                self._simil_func = kwargs["simil_func"]
+            else:
+                self._simil_func = lambda text, opt: text.lower() in opt.lower()
             kwargs.pop("simil_func")
 
         return super().configure(*args, **kwargs)
