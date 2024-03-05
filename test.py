@@ -1,11 +1,12 @@
 from tkinter import Tk, StringVar
-from tkinter.ttk import Combobox, Label
+from tkinter.ttk import Combobox, Label, Style
 from autocombobox import AutoCombobox
 
 values = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink", "Grey", "White", "Black", "Brown"]
 
 class Main:
     def __init__(self):
+        self.count = 0
         self.root = Tk()
         self.root.title("Test")
         self.root.geometry("300x300")
@@ -43,7 +44,8 @@ class Main:
             self.news.config(text=f"Selected {self.stringvar2.get()}")
 
     def postcmd(self):
-        self.news.config(text="Postcommand")
+        self.news.config(text=f"Postcommand {self.count}")
+        self.count += 1
 
 if __name__ == "__main__":
     Main()
