@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autocombobox"
+authors = [
+    {name = "Matteo Chiesa", email = "matteo.chiesa.mc@gmail.com"}
+]
+description = "Insert a ttk-Combobox into your GUI that allows suggestions based on what the user writes"
+version = "1.0.1"
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["autocombobox", "combobox", "autocomplete"]
+requires-python = ">=3.0"
+
+[project.urls]
+Homepage = "https://github.com/Church-17/autocombobox"
