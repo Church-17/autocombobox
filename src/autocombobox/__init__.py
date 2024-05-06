@@ -2,7 +2,7 @@ from collections.abc import Callable
 from tkinter import Listbox, Event, Frame
 from tkinter.ttk import Combobox, Scrollbar
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 class AutoCombobox(Combobox):
     """Autocomplete Combobox"""
