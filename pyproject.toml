@@ -8,7 +8,7 @@ authors = [
     {name="Matteo Chiesa", email="matteo.chiesa.mc@gmail.com"}
 ]
 description = "Insert a Combobox into your GUI that allows suggestions based on what the user writes in"
-version = "1.1.0"
+version = "1.1.1"
 keywords = ["autocombobox", "combobox", "autocompleting", "autocomplete"]
 readme = "README.md"
 license = {file = "LICENSE"}
