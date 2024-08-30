@@ -11,7 +11,7 @@ class AutoCombobox(Combobox):
         Use `filter` to pass the function for filtering the suggestions. It must be a function that
         takes what the user writes and an option, and returns if the option will be displayed or not.
         
-        The default function is:
+        The default filter function is:
 
         `def filter(text, opt): return opt.lower().startswith(text.lower())`
         """
