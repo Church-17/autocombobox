@@ -20,18 +20,18 @@ class Main:
         self.stringvar2 = StringVar(self.root)
         self.kwargs = {
             "values": values,
-            "postcommand": self.postcmd,
             "justify": "center",
             "height": 5
         }
 
         Label(self.root, text="Normal combobox").grid(row=0, column=0, sticky="n")
-        self.combo = Combobox(self.root, **self.kwargs, textvariable=self.stringvar1)
+        self.combo = Combobox(self.root, **self.kwargs, postcommand=self.postcmd, textvariable=self.stringvar1)
         self.combo.grid(row=1, column=0, sticky="n")
         self.combo.bind("<<ComboboxSelected>>", self.selected)
 
         Label(self.root, text="AutoCombobox").grid(row=0, column=1, sticky="n")
-        self.autocombo = AutoCombobox(self.root, **self.kwargs, textvariable=self.stringvar2, simil_func=lambda text, opt: text in opt)
+        self.autocombo = AutoCombobox(self.root, **self.kwargs, textvariable=self.stringvar2)
+        self.autocombo['postcommand']=self.postcmd
         self.autocombo.grid(row=1, column=1, sticky="n")
         self.autocombo.bind("<<ComboboxSelected>>", self.selected)
 
