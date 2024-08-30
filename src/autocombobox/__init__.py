@@ -112,7 +112,7 @@ class AutoCombobox(Combobox):
         """Select one of the possible options"""
 
         # Check params
-        if type(option) != str:
+        if not isinstance(option, str):
             option = str(option)
 
         # Set Combobox on the given value
