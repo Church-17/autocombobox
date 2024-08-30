@@ -11,4 +11,4 @@ It doesn't have any dependences other than tkinter.
 ## Usage
 
 AutoCombobox was created specifically to be used like the normal ttk Combobox, so all its options are available.
-Beside that, it can accept the `simil_func` option, that allows the developer to pass the function that determines the suggestions. The function must take 2 parameters: the first represent the text written on the Entry, and the second represent a possible value of the Combobox; the function then must returns a boolean value, which indicates whetever the option passed as the second parameter will be included in the suggestions or not.
+Beside that, it can accept the `filter` option, that allows the developer to pass the function that determines the suggestions. The function must take 2 parameters: the first represent the text written on the Entry, and the second represent a possible value of the Combobox; the function then must returns a boolean value, which indicates whetever the option passed as the second parameter will be included in the suggestions or not.
