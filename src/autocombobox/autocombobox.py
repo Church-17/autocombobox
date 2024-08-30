@@ -3,30 +3,35 @@ from tkinter import Listbox, Event, Frame
 from tkinter.ttk import Combobox, Scrollbar
 
 class AutoCombobox(Combobox):
-    """Autocomplete Combobox"""
+    """Autocompleting Combobox"""
 
-    def __init__(self, *args, **kwargs):
-        """Create an Autocomplete ttk Combobox. All the ttk Combobox options are available.
+    def __init__(self, master = None, **kwargs) -> None:
+        """Create an Autocompleting ttk Combobox. All the ttk Combobox options are available.
         
-        Use simil_func to pass the function for filtering the suggestions"""
+        Use `filter` to pass the function for filtering the suggestions. It must be a function that
+        takes what the user writes and an option, and returns if the option will be displayed or not.
+        
+        The default function is:
+
+        `def filter(text, opt): return opt.lower().startswith(text.lower())`
+        """
 
         # Declare helper variables
         self._is_posted: bool = False
         self._changed_listbox: bool = False
         self._highlighted_index: int = -1
         self._selected_str: str | None = None
-        self._old_postcommand: Callable[[], object] | None = None
+        self._user_postcommand: Callable[[], object] | None = None
+        self._filter: Callable[[str, str], bool] = lambda text, opt: opt.lower().startswith(text.lower())
 
         # Create Combobox object
-        super().__init__(*args, postcommand=self._postcommand)
-        if "simil_func" not in kwargs:
-            kwargs["simil_func"] = None
+        super().__init__(master, postcommand=self._postcommand)
         self.configure(**kwargs)
 
         # Declare dependent variables
         toplevel = self.winfo_toplevel()
         self._listbox_values: tuple[str] = self["values"]
-
+        
         # Create and configure listbox frame
         self._frame = Frame(toplevel, background="white", highlightbackground="grey48", highlightthickness=1)
         self._listbox = Listbox(self._frame, activestyle="none", width=self["width"], borderwidth=0, highlightthickness=0)
@@ -47,8 +52,8 @@ class AutoCombobox(Combobox):
         """Open the Combobox popdown"""
 
         # Execute user postcommand if there is one
-        if self._old_postcommand:
-            self._old_postcommand()
+        if self._user_postcommand:
+            self._user_postcommand()
 
         # Show frame & update vars
         toplevel = self.winfo_toplevel()
@@ -82,11 +87,11 @@ class AutoCombobox(Combobox):
         # Check params
         if text == None:
             text = self.get()
-        elif type(text) != str:
+        elif not isinstance(text, str):
             text = str(text)
 
         # Change listbox values
-        self._listbox_values = [opt for opt in self["values"] if self._simil_func(text, opt)]
+        self._listbox_values = [opt for opt in self["values"] if self._filter(text, opt)]
         self._listbox.delete(0, "end")
         self._listbox.insert(0, *self._listbox_values)
 
@@ -127,7 +132,7 @@ class AutoCombobox(Combobox):
         """Highlight the option corresponding to the given index and remove highlight from the old one"""
 
         # Check params
-        if type(index) != int:
+        if not isinstance(index, int):
             index = int(index)
 
         # Remove highlight
@@ -226,22 +231,13 @@ class AutoCombobox(Combobox):
             self.change_highlight(-1)
 
     # Override configure method to always handle options
-    def configure(self, *args, **kwargs):
+    def configure(self, cnf = None, **kwargs):
 
-        # Override postcommand parameter
-        if "postcommand" in kwargs:
-            self._old_postcommand = kwargs["postcommand"]
-            kwargs.pop("postcommand")
+        # Override postcommand and filter parameter
+        self._user_postcommand = kwargs.pop("postcommand", self._user_postcommand)
+        self._filter = kwargs.pop("filter", self._filter)
 
-        # Handle simil_func parameter
-        if "simil_func" in kwargs:
-            if kwargs["simil_func"]:
-                self._simil_func = kwargs["simil_func"]
-            else:
-                self._simil_func = lambda text, opt: text.lower() in opt.lower()
-            kwargs.pop("simil_func")
-
-        return super().configure(*args, **kwargs)
+        return super().configure(cnf, **kwargs)
 
     config = configure
 
@@ -254,3 +250,21 @@ class AutoCombobox(Combobox):
 
         # Hide internal listbox
         self.after(0, lambda: self.tk.call("ttk::combobox::Unpost", self))
+
+    def __getitem__(self, key):
+        print('get', key)
+        if key == 'postcommand':
+            return self._user_postcommand
+        elif key == 'filter':
+            return self._filter
+        else:
+            return super().__getitem__(key)
+
+    def __setitem__(self, key, value) -> None:
+        print('set', key, value)
+        if key == 'postcommand':
+            self._user_postcommand = value
+        elif key == 'filter':
+            self._filter = value
+        else:
+            super().__setitem__(key, value)
