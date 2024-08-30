@@ -4,6 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 dynamic = ["version"]
+
 name = "autocombobox"
 description = "Insert a Combobox into your GUI that allows suggestions based on what the user writes in"
 authors = [
