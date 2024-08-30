@@ -1,18 +1,25 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
+dynamic = ["version"]
 name = "autocombobox"
+description = "Insert a Combobox into your GUI that allows suggestions based on what the user writes in"
 authors = [
     {name="Matteo Chiesa", email="matteo.chiesa.mc@gmail.com"}
 ]
-description = "Insert a Combobox into your GUI that allows suggestions based on what the user writes in"
-version = "1.1.1"
-keywords = ["autocombobox", "combobox", "autocompleting", "autocomplete"]
-readme = "README.md"
+maintainers = [
+    {name="Matteo Chiesa", email="matteo.chiesa.mc@gmail.com"}
+]
+
+readme = {file = "README.md", content-type = "text/markdown"}
 license = {file = "LICENSE"}
+
 requires-python = ">=3.10"
+dependencies = []
+
+keywords = ["autocombobox", "combobox", "autocompleting", "autocomplete"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -23,3 +30,6 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/Church-17/autocombobox"
+
+[tool.hatch.version]
+path = "src/autocombobox/__init__.py"
