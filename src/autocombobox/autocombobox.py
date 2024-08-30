@@ -32,7 +32,7 @@ class AutoCombobox(Combobox):
         toplevel = self.winfo_toplevel()
         self._listbox_values: tuple[str] = self["values"]
         
-        # Create and configure listbox frame
+        # Create & configure listbox frame
         self._frame = Frame(toplevel, background="white", highlightbackground="grey48", highlightthickness=1)
         self._listbox = Listbox(self._frame, activestyle="none", width=self["width"], borderwidth=0, highlightthickness=0)
         self._scrollbar = Scrollbar(self._frame, command=self._listbox.yview)
@@ -44,7 +44,7 @@ class AutoCombobox(Combobox):
         toplevel.bind("<Button-1>", self._click_event)      # Handle mouse click
         toplevel.bind("<Configure>", self._window_event)    # Handle window events
         self.bind("<KeyRelease>", self._type_event)         # Handle keyboard typing to display coherent options
-        self.unbind_class("TCombobox", "<Down>")            # Handle keyboard typing to display coherent options
+        self.unbind_class("TCombobox", "<Down>")            # Handle keyboard down to not post original listbox
         self._listbox.bind("<Motion>", self._motion_event)  # Handle mouse movement to control highlight
         self._listbox.bind("<Leave>", self._leave_event)    # Handle mouse movement to control highlight
 
@@ -252,7 +252,6 @@ class AutoCombobox(Combobox):
         self.after(0, lambda: self.tk.call("ttk::combobox::Unpost", self))
 
     def __getitem__(self, key):
-        print('get', key)
         if key == 'postcommand':
             return self._user_postcommand
         elif key == 'filter':
@@ -261,7 +260,6 @@ class AutoCombobox(Combobox):
             return super().__getitem__(key)
 
     def __setitem__(self, key, value) -> None:
-        print('set', key, value)
         if key == 'postcommand':
             self._user_postcommand = value
         elif key == 'filter':
