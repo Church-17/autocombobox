@@ -1,6 +1,9 @@
+import sys
 from tkinter import Tk, StringVar
-from tkinter.ttk import Combobox, Label, Style
-from autocombobox import AutoCombobox
+from tkinter.ttk import Combobox, Label
+
+sys.path.append('.')
+from src.autocombobox import AutoCombobox
 
 values = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink", "Grey", "White", "Black", "Brown"]
 
