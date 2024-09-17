@@ -224,7 +224,7 @@ class AutoCombobox(Combobox):
             self.change_highlight(index)
 
     def _leave_event(self, event: Event):
-        """Handel mouse leaving listbox"""
+        """Handle mouse leaving listbox"""
 
         # Remove highlight if listbox is not changed
         if not self._changed_listbox:
