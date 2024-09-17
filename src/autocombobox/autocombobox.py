@@ -2,6 +2,8 @@ from typing import Callable
 from tkinter import Listbox, Event, Frame
 from tkinter.ttk import Combobox, Scrollbar
 
+from .filters import default_filter
+
 class AutoCombobox(Combobox):
     """Autocompleting Combobox"""
 
@@ -9,12 +11,10 @@ class AutoCombobox(Combobox):
         """Create an Autocompleting Ttk Combobox. All the Ttk Combobox options are available.
         
         Use the parameter `filter` to pass the function for filtering the suggestions.
-        It must be a function that takes in this order what the user writes and an option,
-        and returns if the option will be displayed or not.
+        It must be a callable object that takes in this order the list of options and what the user writes,
+        and returns a list of integers indicates the position of each option, using a negative value to not show it.
         
-        The default filter function is:
-
-        `def filter(text, opt): return opt.lower().startswith(text.lower())`
+        The default filter function shows all the options that starts with the user input
         """
 
         # Declare helper variables
@@ -23,7 +23,7 @@ class AutoCombobox(Combobox):
         self._highlighted_index: int = -1
         self._selected_str: str | None = None
         self._user_postcommand: Callable[[], object] | None = None
-        self._filter: Callable[[str, str], bool] = lambda text, opt: opt.lower().startswith(text.lower())
+        self._filter: Callable[[list[str], str], list[int]] = default_filter
 
         # Create Combobox object
         super().__init__(master, postcommand=self._postcommand)
@@ -92,7 +92,9 @@ class AutoCombobox(Combobox):
             text = str(text)
 
         # Change listbox values
-        self._listbox_values = [opt for opt in self["values"] if self._filter(text, opt)]
+        indices = self._filter(self["values"], text)
+        assert len(indices) == len(self["values"])
+        self._listbox_values = [opt for i, opt in sorted(zip(indices, self["values"])) if i >= 0]
         self._listbox.delete(0, "end")
         self._listbox.insert(0, *self._listbox_values)
 
