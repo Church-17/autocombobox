@@ -7,13 +7,6 @@ from src.autocombobox import AutoCombobox
 values = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink", "Grey", "White", "Black", "Brown"]
 # values = values[0:2]
 
-def get_internal_listbox(combobox):
-        combobox.update()  # Ensure the combobox is fully rendered
-        popdown = combobox.tk.eval(f'namespace children {combobox.winfo_pathname(combobox.winfo_id())}.popdown')
-        listbox_path = combobox.tk.eval(f'namespace children {popdown}.f')
-        listbox = combobox.nametowidget(listbox_path)
-        return listbox
-
 class Main:
     def __init__(self):
         self.count = 0
@@ -35,7 +28,7 @@ class Main:
         style = Style(self.root)
 
         # Set the theme with the theme_use method
-        # style.theme_use('clam')  # put the theme name here, that you want to use
+        style.theme_use('clam')  # put the theme name here, that you want to use
 
         Label(self.root, text="Normal combobox").grid(row=0, column=0, sticky="n")
         self.combo = Combobox(self.root, **self.kwargs, postcommand=self.postcmd, textvariable=self.stringvar1)
