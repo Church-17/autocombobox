@@ -4,6 +4,7 @@ import tkinter.ttk as ttk
 
 from .filters import default_filter
 
+
 class AutoCombobox(ttk.Combobox):
     """Autocompleting Combobox"""
 
