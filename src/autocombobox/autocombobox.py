@@ -43,24 +43,24 @@ class AutoCombobox(ttk.Combobox):
             activestyle="none",
             selectmode="browse",
             exportselection=False,
-            background=self.retrieve_listbox_attr('background'),
-            bd=self.retrieve_listbox_attr('bd'),
-            bg=self.retrieve_listbox_attr('bg'),
-            border=self.retrieve_listbox_attr('border'),
-            borderwidth=self.retrieve_listbox_attr('borderwidth'),
-            cursor=self.retrieve_listbox_attr('cursor'),
-            disabledforeground=self.retrieve_listbox_attr('disabledforeground'),
-            fg=self.retrieve_listbox_attr('fg'),
-            font=self.retrieve_listbox_attr('font'),
-            foreground=self.retrieve_listbox_attr('foreground'),
-            highlightbackground=self.retrieve_listbox_attr('highlightbackground'),
-            highlightcolor=self.retrieve_listbox_attr('highlightcolor'),
-            highlightthickness=self.retrieve_listbox_attr('highlightthickness'),
-            justify=self.retrieve_listbox_attr('justify'),
-            relief=self.retrieve_listbox_attr('relief'),
-            selectbackground=self.retrieve_listbox_attr('selectbackground'),
-            selectborderwidth=self.retrieve_listbox_attr('selectborderwidth'),
-            selectforeground=self.retrieve_listbox_attr('selectforeground'),
+            background=self._retrieve_listbox_attr('background'),
+            bd=self._retrieve_listbox_attr('bd'),
+            bg=self._retrieve_listbox_attr('bg'),
+            border=self._retrieve_listbox_attr('border'),
+            borderwidth=self._retrieve_listbox_attr('borderwidth'),
+            cursor=self._retrieve_listbox_attr('cursor'),
+            disabledforeground=self._retrieve_listbox_attr('disabledforeground'),
+            fg=self._retrieve_listbox_attr('fg'),
+            font=self._retrieve_listbox_attr('font'),
+            foreground=self._retrieve_listbox_attr('foreground'),
+            highlightbackground=self._retrieve_listbox_attr('highlightbackground'),
+            highlightcolor=self._retrieve_listbox_attr('highlightcolor'),
+            highlightthickness=self._retrieve_listbox_attr('highlightthickness'),
+            justify=self._retrieve_listbox_attr('justify'),
+            relief=self._retrieve_listbox_attr('relief'),
+            selectbackground=self._retrieve_listbox_attr('selectbackground'),
+            selectborderwidth=self._retrieve_listbox_attr('selectborderwidth'),
+            selectforeground=self._retrieve_listbox_attr('selectforeground'),
         )
         self._scrollbar = ttk.Scrollbar(self._frame, command=self._listbox.yview)
         self._frame.columnconfigure(0, weight=1)
@@ -284,7 +284,7 @@ class AutoCombobox(ttk.Combobox):
         # Hide internal listbox
         self.after(0, lambda: self.tk.call("ttk::combobox::Unpost", self))
 
-    def retrieve_listbox_attr(self, attr):
+    def _retrieve_listbox_attr(self, attr):
         return self.tk.eval(f'[ttk::combobox::PopdownWindow {self}].f.l cget -{attr}')
 
     def __getitem__(self, key):
