@@ -7,7 +7,11 @@ from .filters import default_filter
 class AutoCombobox(Combobox):
     """Autocompleting Combobox"""
 
-    def __init__(self, master = None, **kwargs) -> None:
+    def __init__(self,
+            master = None,
+            filter: Callable[[list[str], str], list[int]] = default_filter,
+            **kwargs
+        ) -> None:
         """Create an Autocompleting Ttk Combobox. All the Ttk Combobox options are available.
         
         Use the parameter `filter` to pass the function for filtering the suggestions.
@@ -23,7 +27,7 @@ class AutoCombobox(Combobox):
         self._highlighted_index: int = -1
         self._selected_str: str | None = None
         self._user_postcommand: Callable[[], object] | None = None
-        self._filter: Callable[[list[str], str], list[int]] = default_filter
+        self._filter: Callable[[list[str], str], list[int]] = filter
 
         # Create Combobox object
         super().__init__(master, postcommand=self._postcommand)
