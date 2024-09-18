@@ -1,10 +1,10 @@
 from typing import Callable
-from tkinter import Listbox, Event, Frame
-from tkinter.ttk import Combobox, Scrollbar
+import tkinter as tk
+import tkinter.ttk as ttk
 
 from .filters import default_filter
 
-class AutoCombobox(Combobox):
+class AutoCombobox(ttk.Combobox):
     """Autocompleting Combobox"""
 
     def __init__(self,
@@ -38,12 +38,34 @@ class AutoCombobox(Combobox):
         self._listbox_values: tuple[str] = self["values"]
         
         # Create & configure listbox frame
-        self._frame = Frame(toplevel, background="white", highlightbackground="grey48", highlightthickness=1)
-        self._listbox = Listbox(self._frame, activestyle="none", width=self["width"], borderwidth=0, highlightthickness=0)
-        self._scrollbar = Scrollbar(self._frame, command=self._listbox.yview)
-        self._listbox.grid(row=0, column=0, padx=(1, 3), pady=1)
-        self._scrollbar.grid(row=0, column=1, sticky="ns")
-        self._listbox.config(yscrollcommand = self._scrollbar.set)
+        self._frame = ttk.Frame(toplevel, style='ComboboxPopdownFrame')
+        self._listbox = tk.Listbox(self._frame,
+            activestyle="none",
+            selectmode="browse",
+            exportselection=False,
+            background=self.retrieve_listbox_attr('background'),
+            bd=self.retrieve_listbox_attr('bd'),
+            bg=self.retrieve_listbox_attr('bg'),
+            border=self.retrieve_listbox_attr('border'),
+            borderwidth=self.retrieve_listbox_attr('borderwidth'),
+            cursor=self.retrieve_listbox_attr('cursor'),
+            disabledforeground=self.retrieve_listbox_attr('disabledforeground'),
+            fg=self.retrieve_listbox_attr('fg'),
+            font=self.retrieve_listbox_attr('font'),
+            foreground=self.retrieve_listbox_attr('foreground'),
+            highlightbackground=self.retrieve_listbox_attr('highlightbackground'),
+            highlightcolor=self.retrieve_listbox_attr('highlightcolor'),
+            highlightthickness=self.retrieve_listbox_attr('highlightthickness'),
+            justify=self.retrieve_listbox_attr('justify'),
+            relief=self.retrieve_listbox_attr('relief'),
+            selectbackground=self.retrieve_listbox_attr('selectbackground'),
+            selectborderwidth=self.retrieve_listbox_attr('selectborderwidth'),
+            selectforeground=self.retrieve_listbox_attr('selectforeground'),
+        )
+        self._scrollbar = ttk.Scrollbar(self._frame, command=self._listbox.yview)
+        self._frame.columnconfigure(0, weight=1)
+        self._frame.rowconfigure(0, weight=1)
+        self._listbox.configure(yscrollcommand = self._scrollbar.set)
 
         # Bind events
         toplevel.bind("<Button-1>", self._click_event)      # Handle mouse click
@@ -60,23 +82,33 @@ class AutoCombobox(Combobox):
         if self._user_postcommand:
             self._user_postcommand()
 
-        # Show frame
-        toplevel = self.winfo_toplevel()
-        self._frame.place(x=self.winfo_rootx()-toplevel.winfo_rootx(), y=self.winfo_rooty()-toplevel.winfo_rooty()+self.winfo_height())
-        self._frame.lift()
-        self._is_posted = True
-
-        # If the current text is an option or doesn't match with any, reset listbox & select text
-        if (self._selected_str != None and self.get() == self._selected_str) or len(self._listbox_values) == 0:
+        # If the current text is an option, reset listbox
+        if self.get() == self._selected_str:
             self.update_values("")
-            self.select_range(0, "end")
+
+        # If listbox empty, reset listbox & select text
+        elif len(self._listbox_values) == 0:
+            self.update_values("")
+            self.selection_range(0, "end")
             self.icursor("end")
+        
+        # Else update listbox
         else:
             self.update_values()
 
         # If the selected option is in listbox, view it
         if self._selected_str in self._listbox_values:
             self._listbox.see(self._listbox_values.index(self._selected_str))
+
+        # Show frame
+        toplevel = self.winfo_toplevel()
+        self._frame.place(
+            x=self.winfo_rootx()-toplevel.winfo_rootx(),
+            y=self.winfo_rooty()-toplevel.winfo_rooty()+self.winfo_height(),
+            width=self.winfo_width()
+        )
+        self._frame.lift()
+        self._is_posted = True
 
     def hide_listbox(self) -> None:
         """Hide the Combobox popdown"""
@@ -88,7 +120,7 @@ class AutoCombobox(Combobox):
 
     def update_values(self, text: str | None = None) -> None:
         """Update listbox values to show coherent options"""
-
+        
         # Check params
         if text == None:
             text = self.get()
@@ -104,12 +136,13 @@ class AutoCombobox(Combobox):
 
         # Adapt listbox height and don't show scrollbar if it isn't needed
         if self._listbox.size() <= int(self["height"]):
-            height = self._listbox.size()
+            self._listbox.configure(height=self._listbox.size())
             self._scrollbar.grid_forget()
+            self._listbox.grid(row=0, column=0, padx=1, pady=1, sticky='nsew')
         else:
-            height = self["height"]
-            self._scrollbar.grid(row=0, column=1, sticky="ns")
-        self._listbox.config(height=height)
+            self._listbox.configure(height=self["height"])
+            self._scrollbar.grid(row=0, column=1, padx=(0,1), pady=1, sticky="ns")
+            self._listbox.grid(row=0, column=0, padx=(1,0), pady=1, sticky='nsew')
         self._changed_listbox = True
 
         # Highlight selected option if it is in listbox
@@ -132,7 +165,7 @@ class AutoCombobox(Combobox):
         self.focus()
         if option in self["values"]:
             self._selected_str = option
-            self.select_range(0, "end")
+            self.selection_range(0, "end")
             self.event_generate("<<ComboboxSelected>>")
 
     def change_highlight(self, index: int) -> None:
@@ -142,21 +175,14 @@ class AutoCombobox(Combobox):
         if not isinstance(index, int):
             index = int(index)
 
-        # Remove highlight
-        if self._highlighted_index >= 0 and self._highlighted_index < self._listbox.size():
-            self._listbox.itemconfig(self._highlighted_index, {"bg": "white"})
-            self._listbox.itemconfig(self._highlighted_index, {"fg": "black"})
-
         # Highlight
-        if index >= 0 and index < self._listbox.size():
-            self._listbox.itemconfig(index, {"bg": "#0078d7"})
-            self._listbox.itemconfig(index, {"fg": "white"})
-            self._highlighted_index = index
-            self._listbox.see(index)
-        else:
-            self._highlighted_index = -1
+        self._listbox.selection_clear(0, "end")
+        self._listbox.selection_set(index)
+        self._listbox.activate(index)
+        self._listbox.see(index)
+        self._highlighted_index = index if 0 <= index < self._listbox.size() else -1
 
-    def _click_event(self, event: Event) -> None:
+    def _click_event(self, event: tk.Event) -> None:
         """Handle mouse click"""
 
         # Hide listbox if clicked outside
@@ -176,14 +202,14 @@ class AutoCombobox(Combobox):
         elif event.widget == self._listbox and self._highlighted_index >= 0:
             self.select(self._listbox_values[self._highlighted_index])
 
-    def _window_event(self, event: Event) -> None:
+    def _window_event(self, event: tk.Event) -> None:
         """Handle window events"""
 
         # Hide listbox if user interact with the window
         if self._is_posted and event.widget == self.winfo_toplevel():
             self.hide_listbox()
 
-    def _type_event(self, event: Event) -> None:
+    def _type_event(self, event: tk.Event) -> None:
         """Handle keyboard typing"""
 
         if self._is_posted:
@@ -219,7 +245,7 @@ class AutoCombobox(Combobox):
         elif event.char != "" or event.keysym == "Down" or event.keysym == "BackSpace" or event.keysym == "Return":
             self.show_listbox()
 
-    def _motion_event(self, event: Event) -> None:
+    def _motion_event(self, event: tk.Event) -> None:
         """Handle mouse movement"""
 
         # Restore vars
@@ -230,7 +256,7 @@ class AutoCombobox(Combobox):
         if self._highlighted_index != index:
             self.change_highlight(index)
 
-    def _leave_event(self, event: Event) -> None:
+    def _leave_event(self, event: tk.Event) -> None:
         """Handle mouse leaving listbox"""
 
         # Remove highlight if listbox is not changed
@@ -257,6 +283,9 @@ class AutoCombobox(Combobox):
 
         # Hide internal listbox
         self.after(0, lambda: self.tk.call("ttk::combobox::Unpost", self))
+
+    def retrieve_listbox_attr(self, attr):
+        return self.tk.eval(f'[ttk::combobox::PopdownWindow {self}].f.l cget -{attr}')
 
     def __getitem__(self, key):
         if key == 'postcommand':
