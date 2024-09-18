@@ -12,7 +12,8 @@ class AutoCombobox(ttk.Combobox):
             filter: Callable[[list[str], str], list[int]] = default_filter,
             **kwargs
         ) -> None:
-        """Create an Autocompleting Ttk Combobox. All the Ttk Combobox options are available.
+        """
+        Create an Autocompleting Ttk Combobox. All the Ttk Combobox options are available.
         
         Use the parameter `filter` to pass the function for filtering the suggestions.
         It must be a callable object that takes in this order the list of options and what the user writes,
