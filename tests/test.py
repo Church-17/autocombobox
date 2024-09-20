@@ -28,7 +28,7 @@ class Main:
         style = Style(self.root)
 
         # Set the theme with the theme_use method
-        style.theme_use('clam')  # put the theme name here, that you want to use
+        # style.theme_use('clam')  # put the theme name here, that you want to use
 
         Label(self.root, text="Normal combobox").grid(row=0, column=0, sticky="n")
         self.combo = Combobox(self.root, **self.kwargs, postcommand=self.postcmd, textvariable=self.stringvar1)
