@@ -131,7 +131,7 @@ class AutoCombobox(ttk.Combobox):
 
         # Change listbox values
         indices = self._filter(self["values"], text)
-        assert len(indices) == len(self["values"])
+        assert len(indices) == len(self["values"]), "The length of the list returned by the filter function does not match the length of the values"
         self._listbox_values = [opt for i, opt in sorted(zip(indices, self["values"])) if i >= 0]
         self._listbox.delete(0, "end")
         self._listbox.insert(0, *self._listbox_values)
