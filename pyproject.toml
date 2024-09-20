@@ -20,11 +20,12 @@ license = {file = "LICENSE"}
 requires-python = ">=3.10"
 dependencies = []
 
-keywords = ["autocombobox", "combobox", "autocompleting", "autocomplete"]
+keywords = ["autocompleting", "autocomplete", "suggestion", "tkinter", "tk", "ttk", "combobox"]
 classifiers = [
     "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Intended Audience :: Developers",
+    "Operating System :: POSIX :: Linux",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
