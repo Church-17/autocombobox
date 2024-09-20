@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 import tkinter as tk
 import tkinter.ttk as ttk
 
@@ -286,7 +286,7 @@ class AutoCombobox(ttk.Combobox):
         # Hide internal listbox
         self.after(0, lambda: self.tk.call("ttk::combobox::Unpost", self))
 
-    def _retrieve_listbox_attr(self, attr):
+    def _retrieve_listbox_attr(self, attr: str):
         return self.tk.eval(f'[ttk::combobox::PopdownWindow {self}].f.l cget -{attr}')
 
     def __getitem__(self, key):
