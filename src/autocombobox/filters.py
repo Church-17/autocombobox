@@ -1,4 +1,4 @@
-def default_filter(options: list[str], text: str) -> list[int]:
+def default_filter(options: tuple[str], text: str) -> list[int]:
     indices = []
     index = 0
     for opt in options:

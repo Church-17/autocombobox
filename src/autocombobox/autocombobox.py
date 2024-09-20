@@ -10,7 +10,7 @@ class AutoCombobox(ttk.Combobox):
 
     def __init__(self,
             master = None,
-            filter: Callable[[list[str], str], list[int]] = default_filter,
+            filter: Callable[[tuple[str], str], list[int]] = default_filter,
             **kwargs
         ) -> None:
         """
@@ -29,17 +29,15 @@ class AutoCombobox(ttk.Combobox):
         self._highlighted_index: int = -1
         self._selected_str: str | None = None
         self._user_postcommand: Callable[[], object] | None = None
-        self._filter: Callable[[list[str], str], list[int]] = filter
+        self._filter: Callable[[tuple[str], str], list[int]] = filter
+        self._listbox_values: list[str] = []
 
         # Create Combobox object
         super().__init__(master, postcommand=self._postcommand)
         self.configure(**kwargs)
 
-        # Declare dependent variables
-        toplevel = self.winfo_toplevel()
-        self._listbox_values: tuple[str] = self["values"]
-        
         # Create & configure listbox frame
+        toplevel = self.winfo_toplevel()
         self._frame = ttk.Frame(toplevel, style='ComboboxPopdownFrame')
         self._listbox = tk.Listbox(self._frame,
             activestyle="none",
