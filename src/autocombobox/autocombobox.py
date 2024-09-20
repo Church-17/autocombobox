@@ -286,7 +286,7 @@ class AutoCombobox(ttk.Combobox):
         # Hide internal listbox
         self.after(0, lambda: self.tk.call("ttk::combobox::Unpost", self))
 
-    def _retrieve_listbox_attr(self, attr: str):
+    def _retrieve_listbox_attr(self, attr: str) -> str:
         return self.tk.eval(f'[ttk::combobox::PopdownWindow {self}].f.l cget -{attr}')
 
     def __getitem__(self, key):
