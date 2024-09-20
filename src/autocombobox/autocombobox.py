@@ -73,7 +73,7 @@ class AutoCombobox(ttk.Combobox):
         toplevel.bind("<Button-1>", self._click_event)      # Handle mouse click
         toplevel.bind("<Configure>", self._window_event)    # Handle window events
         self.bind("<KeyRelease>", self._type_event)         # Handle keyboard typing to display coherent options
-        self.unbind_class("TCombobox", "<Down>")            # Handle keyboard down to not post original listbox
+        self.unbind("<Down>")                               # Handle keyboard down to not post original listbox
         self._listbox.bind("<Motion>", self._motion_event)  # Handle mouse movement to control highlight
         self._listbox.bind("<Leave>", self._leave_event)    # Handle mouse movement to control highlight
 
