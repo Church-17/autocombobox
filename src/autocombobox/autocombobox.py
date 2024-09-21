@@ -259,7 +259,6 @@ class AutoCombobox(ttk.Combobox):
         """Define new postcommand function to show only the new listbox and not the internal one"""
 
         # Show or hide listbox
-        print('post')
         if self._is_posted:
             self.hide_listbox()
         else:
