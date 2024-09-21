@@ -56,13 +56,13 @@ class AutoCombobox(ttk.Combobox):
         self._listbox.configure(yscrollcommand = self._scrollbar.set)
 
         # Events
-        self.tk.eval(f"bind {self} <Down> break")                             # Unbind keyboard down to not post original listbox
-        self.bind_all("<Button-1>", self._click_event)      # Handle mouse click
-        self.bind("<KeyRelease>", self._type_event)         # Handle keyboard typing to display coherent options
-        self._toplevel.bind("<KeyRelease>", self._type_event)         # Handle keyboard typing to display coherent options
-        self.winfo_toplevel().bind("<Configure>", self._window_event)    # Handle window events
-        self._listbox.bind("<Motion>", self._motion_event)  # Handle mouse movement to control highlight
-        self._listbox.bind("<Leave>", self._leave_event)    # Handle mouse movement to control highlight
+        self.tk.eval(f"bind {self} <Down> break")                       # Unbind keyboard down to not post original listbox
+        self.bind_all("<Button-1>", self._click_event)                  # Handle mouse click
+        self.bind("<KeyRelease>", self._type_event)                     # Handle keyboard typing to display coherent options
+        self._toplevel.bind("<KeyRelease>", self._type_event)           # Handle keyboard typing to display coherent options
+        self.winfo_toplevel().bind("<Configure>", self._window_event)   # Handle window events
+        self._listbox.bind("<Motion>", self._motion_event)              # Handle mouse movement to control highlight
+        self._listbox.bind("<Leave>", self._leave_event)                # Handle mouse movement to control highlight
 
     def show_listbox(self) -> None:
         """Open the Combobox popdown"""
