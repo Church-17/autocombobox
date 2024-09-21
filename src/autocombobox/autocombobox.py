@@ -273,17 +273,17 @@ class AutoCombobox(ttk.Combobox):
     config = configure
 
     def __getitem__(self, key) -> object:
-        if key == 'postcommand':
+        if key == "postcommand":
             return self._user_postcommand
-        elif key == 'filter':
+        elif key == "filter":
             return self._filter
         else:
             return super().__getitem__(key)
 
     def __setitem__(self, key, value) -> None:
-        if key == 'postcommand':
+        if key == "postcommand":
             self._user_postcommand = value
-        elif key == 'filter':
+        elif key == "filter":
             self._filter = value
         else:
             super().__setitem__(key, value)
