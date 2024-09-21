@@ -36,9 +36,15 @@ class AutoCombobox(ttk.Combobox):
         super().__init__(master, postcommand=self._postcommand)
         self.configure(**kwargs)
 
-        # Listbox frame
-        toplevel = self.winfo_toplevel()
-        self._frame = ttk.Frame(toplevel, style="ComboboxPopdownFrame")
+        # Listbox toplevel
+        self._toplevel = tk.Toplevel(self)
+        self._toplevel.overrideredirect(True)
+        self._toplevel.columnconfigure(0, weight=1)
+        self._toplevel.rowconfigure(0, weight=1)
+        self._frame = ttk.Frame(self._toplevel, style="ComboboxPopdownFrame")
+        self._frame.grid(column=0, row=0, sticky='NSEW')
+        self._frame.columnconfigure(0, weight=1)
+        self._frame.rowconfigure(0, weight=1)
         self._listbox = tk.Listbox(self._frame,
             activestyle="none",
             selectmode="browse",
@@ -46,13 +52,12 @@ class AutoCombobox(ttk.Combobox):
             **{k: self._retrieve_listbox_attr(k) for k in {"background", "bd", "bg", "border", "borderwidth", "cursor", "disabledforeground", "fg", "font", "foreground", "highlightbackground", "highlightcolor", "highlightthickness", "justify", "relief", "selectbackground", "selectborderwidth", "selectforeground"}}
         )
         self._scrollbar = ttk.Scrollbar(self._frame, command=self._listbox.yview)
-        self._frame.columnconfigure(0, weight=1)
-        self._frame.rowconfigure(0, weight=1)
         self._listbox.configure(yscrollcommand = self._scrollbar.set)
 
         # Events
-        toplevel.bind("<Button-1>", self._click_event)      # Handle mouse click
-        toplevel.bind("<Configure>", self._window_event)    # Handle window events
+        self.winfo_toplevel().bind("<Button-1>", self._click_event)      # Handle mouse click
+        self._toplevel.bind("<Button-1>", self._click_event)      # Handle mouse click
+        self.winfo_toplevel().bind("<Configure>", self._window_event)    # Handle window events
         self.bind("<KeyRelease>", self._type_event)         # Handle keyboard typing to display coherent options
         self.unbind("<Down>")                               # Handle keyboard down to not post original listbox
         self._listbox.bind("<Motion>", self._motion_event)  # Handle mouse movement to control highlight
@@ -83,21 +88,19 @@ class AutoCombobox(ttk.Combobox):
         if self._selected_str in self._listbox_values:
             self._listbox.see(self._listbox_values.index(self._selected_str))
 
-        # Show frame
-        toplevel = self.winfo_toplevel()
-        self._frame.place(
-            x=self.winfo_rootx()-toplevel.winfo_rootx(),
-            y=self.winfo_rooty()-toplevel.winfo_rooty()+self.winfo_height(),
-            width=self.winfo_width()
-        )
-        self._frame.lift()
+        # Show listbox toplevel
+        self._toplevel.manage(self._toplevel)
+        self._frame.update_idletasks()
+        self._toplevel.geometry(f"{self.winfo_width()}x{self._frame.winfo_height()}+{self.winfo_rootx()}+{self.winfo_rooty()+self.winfo_height()}")
+        self._toplevel.update()
+        self._toplevel.lift()
         self._is_posted = True
 
     def hide_listbox(self) -> None:
         """Hide the Combobox popdown"""
 
         # Hide frame
-        self._frame.place_forget()
+        self._toplevel.forget(self._toplevel)
         self.change_highlight(-1)
         self._is_posted = False
 
@@ -121,11 +124,11 @@ class AutoCombobox(ttk.Combobox):
         if self._listbox.size() <= int(self["height"]):
             self._listbox.configure(height=self._listbox.size())
             self._scrollbar.grid_forget()
-            self._listbox.grid(row=0, column=0, padx=1, pady=1, sticky='nsew')
+            self._listbox.grid(row=0, column=0, padx=1, pady=1, sticky='NSEW')
         else:
             self._listbox.configure(height=self["height"])
-            self._scrollbar.grid(row=0, column=1, padx=(0,1), pady=1, sticky="ns")
-            self._listbox.grid(row=0, column=0, padx=(1,0), pady=1, sticky='nsew')
+            self._scrollbar.grid(row=0, column=1, padx=(0,1), pady=1, sticky="NS")
+            self._listbox.grid(row=0, column=0, padx=(1,0), pady=1, sticky='NSEW')
         self._changed_listbox = True
 
         # Highlight selected option if it is in listbox
@@ -169,7 +172,7 @@ class AutoCombobox(ttk.Combobox):
         """Handle mouse click"""
 
         # Hide listbox if clicked outside
-        if self._is_posted and event.widget != self and event.widget != self._listbox and event.widget != self._scrollbar and event.widget != self._frame:
+        if self._is_posted and event.widget != self and event.widget.winfo_toplevel() != self._toplevel:
             self.hide_listbox()
 
         elif event.widget == self:
