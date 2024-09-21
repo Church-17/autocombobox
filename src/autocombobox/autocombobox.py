@@ -144,11 +144,13 @@ class AutoCombobox(ttk.Combobox):
         if not isinstance(option, str):
             option = str(option)
 
+        # Focus on Combobox
+        self.hide_listbox()
+        self.focus()
+
         # Set Combobox on the given value
         self.set(option)
         self.icursor("end")
-        self.hide_listbox()
-        self.focus()
         if option in self["values"]:
             self._selected_str = option
             self.selection_range(0, "end")
