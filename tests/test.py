@@ -5,14 +5,14 @@ sys.path.append('.')
 from src.autocombobox import AutoCombobox
 
 values = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink", "Grey", "White", "Black", "Brown"]
-# values = values[0:2]
+values = values[0:2]
 
 class Main:
     def __init__(self):
         self.count = 0
         self.root = Tk()
         self.root.title("Test")
-        self.root.geometry("300x300")
+        # self.root.geometry("300x300")
         self.root.rowconfigure((1, 2), weight=1)
         self.root.columnconfigure((0, 1), weight=1)
 
