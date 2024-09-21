@@ -25,7 +25,8 @@ class AutoCombobox(ttk.Combobox):
 
         # Interval variables
         self._is_posted: bool = False
-        self._changed_listbox: bool = False
+        self._postcommand_done: bool = False
+        self._prevent_leave: bool = False
         self._highlighted_index: int = -1
         self._selected_str: str | None = None
         self['postcommand'] = None
@@ -42,7 +43,7 @@ class AutoCombobox(ttk.Combobox):
         self._toplevel.columnconfigure(0, weight=1)
         self._toplevel.rowconfigure(0, weight=1)
         self._frame = ttk.Frame(self._toplevel, style="ComboboxPopdownFrame")
-        self._frame.grid(column=0, row=0, sticky='NSEW')
+        self._frame.grid(column=0, row=0)
         self._frame.columnconfigure(0, weight=1)
         self._frame.rowconfigure(0, weight=1)
         self._listbox = tk.Listbox(self._frame,
@@ -55,11 +56,11 @@ class AutoCombobox(ttk.Combobox):
         self._listbox.configure(yscrollcommand = self._scrollbar.set)
 
         # Events
-        self.winfo_toplevel().bind("<Button-1>", self._click_event)      # Handle mouse click
-        self._toplevel.bind("<Button-1>", self._click_event)      # Handle mouse click
-        self.winfo_toplevel().bind("<Configure>", self._window_event)    # Handle window events
+        self.tk.eval(f"bind {self} <Down> break")                             # Unbind keyboard down to not post original listbox
+        self.bind_all("<Button-1>", self._click_event)      # Handle mouse click
         self.bind("<KeyRelease>", self._type_event)         # Handle keyboard typing to display coherent options
-        self.unbind("<Down>")                               # Handle keyboard down to not post original listbox
+        self._toplevel.bind("<KeyRelease>", self._type_event)         # Handle keyboard typing to display coherent options
+        self.winfo_toplevel().bind("<Configure>", self._window_event)    # Handle window events
         self._listbox.bind("<Motion>", self._motion_event)  # Handle mouse movement to control highlight
         self._listbox.bind("<Leave>", self._leave_event)    # Handle mouse movement to control highlight
 
@@ -70,6 +71,10 @@ class AutoCombobox(ttk.Combobox):
         if self._user_postcommand:
             self._user_postcommand()
 
+        # Show listbox toplevel
+        self._toplevel.manage(self._toplevel)
+        self._toplevel.lift()
+        
         # If the current text is an option, reset listbox
         if self.get() == self._selected_str:
             self.update_values("")
@@ -88,25 +93,21 @@ class AutoCombobox(ttk.Combobox):
         if self._selected_str in self._listbox_values:
             self._listbox.see(self._listbox_values.index(self._selected_str))
 
-        # Show listbox toplevel
-        self._toplevel.manage(self._toplevel)
-        self._frame.update_idletasks()
-        self._toplevel.geometry(f"{self.winfo_width()}x{self._frame.winfo_height()}+{self.winfo_rootx()}+{self.winfo_rooty()+self.winfo_height()}")
-        self._toplevel.update()
-        self._toplevel.lift()
         self._is_posted = True
 
     def hide_listbox(self) -> None:
         """Hide the Combobox popdown"""
 
-        # Hide frame
-        self._toplevel.forget(self._toplevel)
+        # Reset highglight
         self.change_highlight(-1)
+
+        # Hide listbox toplevel
+        self._toplevel.forget(self._toplevel)
         self._is_posted = False
 
     def update_values(self, text: str | None = None) -> None:
         """Update listbox values to show coherent options"""
-        
+
         # Check params
         if text == None:
             text = self.get()
@@ -124,12 +125,13 @@ class AutoCombobox(ttk.Combobox):
         if self._listbox.size() <= int(self["height"]):
             self._listbox.configure(height=self._listbox.size())
             self._scrollbar.grid_forget()
-            self._listbox.grid(row=0, column=0, padx=1, pady=1, sticky='NSEW')
+            self._listbox.grid(row=0, column=0, padx=1, pady=1, sticky="NSEW")
         else:
             self._listbox.configure(height=self["height"])
             self._scrollbar.grid(row=0, column=1, padx=(0,1), pady=1, sticky="NS")
-            self._listbox.grid(row=0, column=0, padx=(1,0), pady=1, sticky='NSEW')
-        self._changed_listbox = True
+            self._listbox.grid(row=0, column=0, padx=(1,0), pady=1, sticky="NSEW")
+        self._frame.update()
+        self._toplevel.geometry(f"{self.winfo_width()}x{self._frame.winfo_height()}+{self.winfo_rootx()}+{self.winfo_rooty()+self.winfo_height()}")
 
         # Highlight selected option if it is in listbox
         if self._selected_str in self._listbox_values:
@@ -174,21 +176,24 @@ class AutoCombobox(ttk.Combobox):
         """Handle mouse click"""
 
         # Hide listbox if clicked outside
-        if self._is_posted and event.widget != self and event.widget.winfo_toplevel() != self._toplevel:
+        if not isinstance(event.widget, tk.Misc):
             self.hide_listbox()
-
+        
         elif event.widget == self:
-            # If listbox is open, update it
-            if self._is_posted:
-                self.update_values()
-
-            # If listbox is not opened, open it
+            if not self._postcommand_done:
+                if self._is_posted:
+                    self.update_values()
+                else:
+                    self.show_listbox()
             else:
-                self.show_listbox()
+                self._postcommand_done = False
 
-        # If clicked on listobox select the option
-        elif event.widget == self._listbox and self._highlighted_index >= 0:
-            self.select(self._listbox_values[self._highlighted_index])
+        elif self._is_posted:
+            if event.widget.winfo_toplevel() != self._toplevel:
+                self.hide_listbox()
+
+            elif event.widget == self._listbox and self._highlighted_index >= 0:
+                self.select(self._listbox_values[self._highlighted_index])
 
     def _window_event(self, event: tk.Event) -> None:
         """Handle window events"""
@@ -201,7 +206,7 @@ class AutoCombobox(ttk.Combobox):
         """Handle keyboard typing"""
 
         if self._is_posted:
-            # Gide listbox when ESC pressed
+            # Hide listbox when ESC pressed
             if event.keysym == "Escape":
                 self.hide_listbox()
 
@@ -210,11 +215,9 @@ class AutoCombobox(ttk.Combobox):
                 self.select(self._listbox_values[self._highlighted_index])
 
             # If arrow pressed, move highlight
-            elif event.keysym == "Down":
-                if self._highlighted_index + 1 < self._listbox.size():
-                    self.change_highlight(self._highlighted_index + 1)
-            elif event.keysym == "Up":
-                if self._highlighted_index - 1 >= 0:
+            elif event.keysym == "Down" and self._highlighted_index + 1 < self._listbox.size():
+                self.change_highlight(self._highlighted_index + 1)
+            elif event.keysym == "Up" and self._highlighted_index - 1 >= 0:
                     self.change_highlight(self._highlighted_index - 1)
 
             # If home pressed, highlight first option
@@ -228,6 +231,7 @@ class AutoCombobox(ttk.Combobox):
             # Filter options
             else:
                 self.update_values()
+                self._prevent_leave = True
 
         # Show listbox if is not opened
         elif event.char != "" or event.keysym == "Down" or event.keysym == "BackSpace" or event.keysym == "Return":
@@ -237,7 +241,7 @@ class AutoCombobox(ttk.Combobox):
         """Handle mouse movement"""
 
         # Restore vars
-        self._changed_listbox = False
+        self._prevent_leave = False
 
         # Highlight option under mouse and remove highlight from the old one
         index = self._listbox.index(f"@{event.x},{event.y}")
@@ -248,15 +252,19 @@ class AutoCombobox(ttk.Combobox):
         """Handle mouse leaving listbox"""
 
         # Remove highlight if listbox is not changed
-        if not self._changed_listbox:
+        if not self._prevent_leave:
             self.change_highlight(-1)
 
     def _postcommand(self) -> None:
         """Define new postcommand function to show only the new listbox and not the internal one"""
 
-        # If the listbox is opened, hide it
+        # Show or hide listbox
+        print('post')
         if self._is_posted:
-            self.after(0, self.hide_listbox)
+            self.hide_listbox()
+        else:
+            self.show_listbox()
+        self._postcommand_done = True
 
         # Hide internal listbox
         self.after(0, lambda: self.tk.call("ttk::combobox::Unpost", self))
