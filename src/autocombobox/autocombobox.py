@@ -38,12 +38,12 @@ class AutoCombobox(ttk.Combobox):
 
         # Create & configure listbox frame
         toplevel = self.winfo_toplevel()
-        self._frame = ttk.Frame(toplevel, style='ComboboxPopdownFrame')
+        self._frame = ttk.Frame(toplevel, style="ComboboxPopdownFrame")
         self._listbox = tk.Listbox(self._frame,
             activestyle="none",
             selectmode="browse",
             exportselection=False,
-            **{k: self._retrieve_listbox_attr(k) for k in {'background', 'bd', 'bg', 'border', 'borderwidth', 'cursor', 'disabledforeground', 'fg', 'font', 'foreground', 'highlightbackground', 'highlightcolor', 'highlightthickness', 'justify', 'relief', 'selectbackground', 'selectborderwidth', 'selectforeground'}}
+            **{k: self._retrieve_listbox_attr(k) for k in {"background", "bd", "bg", "border", "borderwidth", "cursor", "disabledforeground", "fg", "font", "foreground", "highlightbackground", "highlightcolor", "highlightthickness", "justify", "relief", "selectbackground", "selectborderwidth", "selectforeground"}}
         )
         self._scrollbar = ttk.Scrollbar(self._frame, command=self._listbox.yview)
         self._frame.columnconfigure(0, weight=1)
