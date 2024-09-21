@@ -130,7 +130,8 @@ class AutoCombobox(ttk.Combobox):
             self._listbox.configure(height=self["height"])
             self._scrollbar.grid(row=0, column=1, padx=(0,1), pady=1, sticky="NS")
             self._listbox.grid(row=0, column=0, padx=(1,0), pady=1, sticky="NSEW")
-        self._frame.update()
+        self._toplevel.geometry(f"{self.winfo_width()}x{self.winfo_screenheight()}+{self.winfo_rootx()}+{self.winfo_rooty()+self.winfo_height()}")
+        self._frame.update_idletasks()
         self._toplevel.geometry(f"{self.winfo_width()}x{self._frame.winfo_height()}+{self.winfo_rootx()}+{self.winfo_rooty()+self.winfo_height()}")
 
         # Highlight selected option if it is in listbox
