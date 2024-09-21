@@ -43,24 +43,7 @@ class AutoCombobox(ttk.Combobox):
             activestyle="none",
             selectmode="browse",
             exportselection=False,
-            background=self._retrieve_listbox_attr('background'),
-            bd=self._retrieve_listbox_attr('bd'),
-            bg=self._retrieve_listbox_attr('bg'),
-            border=self._retrieve_listbox_attr('border'),
-            borderwidth=self._retrieve_listbox_attr('borderwidth'),
-            cursor=self._retrieve_listbox_attr('cursor'),
-            disabledforeground=self._retrieve_listbox_attr('disabledforeground'),
-            fg=self._retrieve_listbox_attr('fg'),
-            font=self._retrieve_listbox_attr('font'),
-            foreground=self._retrieve_listbox_attr('foreground'),
-            highlightbackground=self._retrieve_listbox_attr('highlightbackground'),
-            highlightcolor=self._retrieve_listbox_attr('highlightcolor'),
-            highlightthickness=self._retrieve_listbox_attr('highlightthickness'),
-            justify=self._retrieve_listbox_attr('justify'),
-            relief=self._retrieve_listbox_attr('relief'),
-            selectbackground=self._retrieve_listbox_attr('selectbackground'),
-            selectborderwidth=self._retrieve_listbox_attr('selectborderwidth'),
-            selectforeground=self._retrieve_listbox_attr('selectforeground'),
+            **{k: self._retrieve_listbox_attr(k) for k in {'background', 'bd', 'bg', 'border', 'borderwidth', 'cursor', 'disabledforeground', 'fg', 'font', 'foreground', 'highlightbackground', 'highlightcolor', 'highlightthickness', 'justify', 'relief', 'selectbackground', 'selectborderwidth', 'selectforeground'}}
         )
         self._scrollbar = ttk.Scrollbar(self._frame, command=self._listbox.yview)
         self._frame.columnconfigure(0, weight=1)
@@ -263,17 +246,6 @@ class AutoCombobox(ttk.Combobox):
         if not self._changed_listbox:
             self.change_highlight(-1)
 
-    # Override configure method to always handle options
-    def configure(self, cnf = None, **kwargs):
-
-        # Override postcommand and filter parameter
-        self._user_postcommand = kwargs.pop("postcommand", self._user_postcommand)
-        self._filter = kwargs.pop("filter", self._filter)
-
-        return super().configure(cnf, **kwargs)
-
-    config = configure
-
     def _postcommand(self) -> None:
         """Define new postcommand function to show only the new listbox and not the internal one"""
 
@@ -285,9 +257,22 @@ class AutoCombobox(ttk.Combobox):
         self.after(0, lambda: self.tk.call("ttk::combobox::Unpost", self))
 
     def _retrieve_listbox_attr(self, attr: str) -> str:
+        """Function to retrieve attributes of Combobox Listbox"""
+
         return self.tk.eval(f'[ttk::combobox::PopdownWindow {self}].f.l cget -{attr}')
 
-    def __getitem__(self, key):
+    # Methods to override to always handle parameters
+
+    def configure(self, cnf = None, **kwargs):
+
+        for param in {"postcommand", "filter"}:
+            self[param] = kwargs.pop(param, self[param])
+
+        return super().configure(cnf, **kwargs)
+
+    config = configure
+
+    def __getitem__(self, key) -> object:
         if key == 'postcommand':
             return self._user_postcommand
         elif key == 'filter':
