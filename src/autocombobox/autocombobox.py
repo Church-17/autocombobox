@@ -216,9 +216,11 @@ class AutoCombobox(ttk.Combobox):
                 self.select(self._listbox_values[self._highlighted_index])
 
             # If arrow pressed, move highlight
-            elif event.keysym == "Down" and self._highlighted_index + 1 < self._listbox.size():
-                self.change_highlight(self._highlighted_index + 1)
-            elif event.keysym == "Up" and self._highlighted_index - 1 >= 0:
+            elif event.keysym == "Down":
+                if self._highlighted_index + 1 < self._listbox.size():
+                    self.change_highlight(self._highlighted_index + 1)
+            elif event.keysym == "Up":
+                if self._highlighted_index - 1 >= 0:
                     self.change_highlight(self._highlighted_index - 1)
 
             # If home pressed, highlight first option
