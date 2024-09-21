@@ -180,13 +180,13 @@ class AutoCombobox(ttk.Combobox):
             self.hide_listbox()
         
         elif event.widget == self:
-            if not self._postcommand_done:
+            if self._postcommand_done:
+                self._postcommand_done = False
+            else:
                 if self._is_posted:
                     self.update_values()
                 else:
                     self.show_listbox()
-            else:
-                self._postcommand_done = False
 
         elif self._is_posted:
             if event.widget.winfo_toplevel() != self._toplevel:
