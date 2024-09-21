@@ -240,9 +240,6 @@ class AutoCombobox(ttk.Combobox):
     def _motion_event(self, event: tk.Event) -> None:
         """Handle mouse movement"""
 
-        # Restore vars
-        self._prevent_leave = False
-
         # Highlight option under mouse and remove highlight from the old one
         index = self._listbox.index(f"@{event.x},{event.y}")
         if self._highlighted_index != index:
@@ -251,8 +248,10 @@ class AutoCombobox(ttk.Combobox):
     def _leave_event(self, event: tk.Event) -> None:
         """Handle mouse leaving listbox"""
 
-        # Remove highlight if listbox is not changed
-        if not self._prevent_leave:
+        # Remove highlight when leave moving cursor
+        if self._prevent_leave:
+            self._prevent_leave = False
+        else:
             self.change_highlight(-1)
 
     def _postcommand(self) -> None:
