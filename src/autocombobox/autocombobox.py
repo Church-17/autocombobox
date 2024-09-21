@@ -23,20 +23,20 @@ class AutoCombobox(ttk.Combobox):
         The default filter function shows all the options that starts with the user input
         """
 
-        # Declare helper variables
+        # Interval variables
         self._is_posted: bool = False
         self._changed_listbox: bool = False
         self._highlighted_index: int = -1
         self._selected_str: str | None = None
-        self._user_postcommand: Callable[[], object] | None = None
-        self._filter: Callable[[tuple[str], str], list[int]] = filter
+        self['postcommand'] = None
+        self['filter'] = filter
         self._listbox_values: list[str] = []
 
-        # Create Combobox object
+        # Create Combobox
         super().__init__(master, postcommand=self._postcommand)
         self.configure(**kwargs)
 
-        # Create & configure listbox frame
+        # Listbox frame
         toplevel = self.winfo_toplevel()
         self._frame = ttk.Frame(toplevel, style="ComboboxPopdownFrame")
         self._listbox = tk.Listbox(self._frame,
@@ -50,7 +50,7 @@ class AutoCombobox(ttk.Combobox):
         self._frame.rowconfigure(0, weight=1)
         self._listbox.configure(yscrollcommand = self._scrollbar.set)
 
-        # Bind events
+        # Events
         toplevel.bind("<Button-1>", self._click_event)      # Handle mouse click
         toplevel.bind("<Configure>", self._window_event)    # Handle window events
         self.bind("<KeyRelease>", self._type_event)         # Handle keyboard typing to display coherent options
@@ -282,8 +282,8 @@ class AutoCombobox(ttk.Combobox):
 
     def __setitem__(self, key, value) -> None:
         if key == "postcommand":
-            self._user_postcommand = value
+            self._user_postcommand: Callable[[], object] | None = value
         elif key == "filter":
-            self._filter = value
+            self._filter: Callable[[tuple[str], str], list[int]] = value
         else:
             super().__setitem__(key, value)
