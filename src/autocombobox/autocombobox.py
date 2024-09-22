@@ -130,9 +130,8 @@ class AutoCombobox(ttk.Combobox):
             self._listbox.configure(height=self["height"])
             self._scrollbar.grid(row=0, column=1, padx=(0,1), pady=1, sticky="NS")
             self._listbox.grid(row=0, column=0, padx=(1,0), pady=1, sticky="NSEW")
-        self._toplevel.geometry(f"{self.winfo_width()}x{self.winfo_screenheight()}+{self.winfo_rootx()}+{self.winfo_rooty()+self.winfo_height()}")
         self._frame.update_idletasks()
-        self._toplevel.geometry(f"{self.winfo_width()}x{self._frame.winfo_height()}+{self.winfo_rootx()}+{self.winfo_rooty()+self.winfo_height()}")
+        self._toplevel.geometry(f"{self.winfo_width()}x{self._frame.winfo_reqheight()}+{self.winfo_rootx()}+{self.winfo_rooty()+self.winfo_height()}")
 
         # Highlight selected option if it is in listbox
         if self._selected_str in self._listbox_values:
@@ -166,12 +165,16 @@ class AutoCombobox(ttk.Combobox):
         if not isinstance(index, int):
             index = int(index)
 
-        # Highlight
+        # Remove previous highlight
         self._listbox.selection_clear(0, "end")
-        self._listbox.selection_set(index)
-        self._listbox.activate(index)
-        self._listbox.see(index)
-        self._highlighted_index = index if 0 <= index < self._listbox.size() else -1
+
+        # Add new highlight if valid index
+        if 0 <= index < self._listbox.size():
+            self._listbox.selection_set(index)
+            self._listbox.see(index)
+            self._highlighted_index = index
+        else:
+            self._highlighted_index = -1
 
     def _click_event(self, event: tk.Event) -> None:
         """Handle mouse click"""
