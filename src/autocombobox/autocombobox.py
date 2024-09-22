@@ -179,23 +179,28 @@ class AutoCombobox(ttk.Combobox):
     def _click_event(self, event: tk.Event) -> None:
         """Handle mouse click"""
 
-        # Hide listbox if clicked outside
+        # Handle str event widget
         if not isinstance(event.widget, tk.Misc):
             self.hide_listbox()
         
         elif event.widget == self:
+            # If it's done also the postcommand, do nothing and reset vars
             if self._postcommand_done:
                 self._postcommand_done = False
             else:
+                # If click on Combobox and the listbox is already shown, update listbox
                 if self._is_posted:
                     self.update_values()
+                # If click on Combobox and the listbox isn't shown, show it
                 else:
                     self.show_listbox()
 
         elif self._is_posted:
+            # If click outside and the listbox is shown, hide it
             if event.widget.winfo_toplevel() != self._toplevel:
                 self.hide_listbox()
 
+            # If click in listbox, select the highlighted value
             elif event.widget == self._listbox and self._highlighted_index >= 0:
                 self.select(self._listbox_values[self._highlighted_index])
 
