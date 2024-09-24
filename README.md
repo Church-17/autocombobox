@@ -4,7 +4,7 @@
 
 AutoCombobox is a Ttk widget based on the existing Combobox. It allows the user to write on the entry field, viewing at the same time some suggested option based on what the user writes. The suggestions are customizable through a function that can be defined by the developer.
 
-![Example of use](./images\description.png)
+![Example of use](./images/description.png)
 
 ## Installation
 
