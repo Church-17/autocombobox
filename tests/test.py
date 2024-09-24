@@ -5,7 +5,7 @@ sys.path.append('.')
 from src.autocombobox import AutoCombobox
 
 values = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink", "Grey", "White", "Black", "Brown"]
-values = values[0:2]
+# values = values[0:2]
 
 class Main:
     def __init__(self):
