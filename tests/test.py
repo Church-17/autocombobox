@@ -22,7 +22,7 @@ class Main:
             "values": values,
             "justify": "center",
             "height": 5,
-            'width': 15
+            'width': 30,
         }
         # Create a style
         style = Style(self.root)
