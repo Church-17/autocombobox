@@ -43,7 +43,7 @@ class AutoCombobox(ttk.Combobox):
         self._toplevel.columnconfigure(0, weight=1)
         self._toplevel.rowconfigure(0, weight=1)
         self._frame = ttk.Frame(self._toplevel, style="ComboboxPopdownFrame")
-        self._frame.grid(column=0, row=0)
+        self._frame.grid(column=0, row=0, sticky="NSEW")
         self._frame.columnconfigure(0, weight=1)
         self._frame.rowconfigure(0, weight=1)
         self._listbox = tk.Listbox(self._frame,
