@@ -4,6 +4,8 @@ import tkinter.ttk as ttk
 
 from .filters import default_filter
 
+NO_HIGHLIGHT = -1
+
 
 class AutoCombobox(ttk.Combobox):
     """Autocompleting Combobox"""
@@ -27,7 +29,7 @@ class AutoCombobox(ttk.Combobox):
         self._is_posted: bool = False
         self._postcommand_done: bool = False
         self._prevent_leave: bool = False
-        self._highlighted_index: int = -1
+        self._highlighted_index: int = NO_HIGHLIGHT
         self._selected_str: str | None = None
         self['postcommand'] = None
         self['filter'] = filter
@@ -104,7 +106,7 @@ class AutoCombobox(ttk.Combobox):
         """Hide the Combobox popdown"""
 
         # Reset highglight
-        self.change_highlight(-1)
+        self.change_highlight(NO_HIGHLIGHT)
 
         # Hide listbox toplevel
         self._toplevel.forget(self._toplevel)
@@ -143,6 +145,8 @@ class AutoCombobox(ttk.Combobox):
             self.change_highlight(self._listbox_values.index(self._selected_str))
         elif self._listbox_values:
             self.change_highlight(0)
+        else:
+            self.change_highlight(NO_HIGHLIGHT)
 
     def select(self, option: str) -> None:
         """Select one of the possible options"""
@@ -179,7 +183,7 @@ class AutoCombobox(ttk.Combobox):
             self._listbox.see(index)
             self._highlighted_index = index
         else:
-            self._highlighted_index = -1
+            self._highlighted_index = NO_HIGHLIGHT
 
     def _click_event(self, event: tk.Event) -> None:
         """Handle mouse click"""
@@ -226,7 +230,8 @@ class AutoCombobox(ttk.Combobox):
 
             # Select the highlighted option if is pressed enter
             elif event.keysym == "Return" and self._highlighted_index >= 0:
-                self.select(self._listbox_values[self._highlighted_index])
+                if 0 <= self._highlighted_index < self._listbox.size():
+                    self.select(self._listbox_values[self._highlighted_index])
 
             # If arrow pressed, move highlight
             elif event.keysym == "Down":
@@ -268,7 +273,7 @@ class AutoCombobox(ttk.Combobox):
         if self._prevent_leave:
             self._prevent_leave = False
         else:
-            self.change_highlight(-1)
+            self.change_highlight(NO_HIGHLIGHT)
 
     def _postcommand(self) -> None:
         """Define new postcommand function to show only the new listbox and not the internal one"""
