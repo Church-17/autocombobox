@@ -61,15 +61,15 @@ class AutoCombobox(ttk.Combobox):
         # - Unbind keyboard down to not post original listbox
         self.tk.eval(f"bind {self} <Down> break")
         # - Handle mouse click
-        self.bind_all("<Button-1>", self._click_event)
+        self.bind_all("<Button-1>", self._click_event, '+')
         # - Handle keyboard typing to display coherent options
         self.bind("<KeyRelease>", self._type_event)
         self._toplevel.bind("<KeyRelease>", self._type_event)
         # - Handle window events
-        self.winfo_toplevel().bind("<Configure>", self._window_event)
+        self.winfo_toplevel().bind("<Configure>", self._window_event, '+')
         # Handle mouse movement to control highlight
-        self._listbox.bind("<Motion>", self._motion_event)
-        self._listbox.bind("<Leave>", self._leave_event)
+        self._toplevel.bind("<Motion>", self._motion_event)
+        self._toplevel.bind("<Leave>", self._leave_event)
 
     def show_listbox(self) -> None:
         """Open the Combobox popdown"""
@@ -206,9 +206,8 @@ class AutoCombobox(ttk.Combobox):
 
         elif self._is_posted:
             # If click outside and the listbox is shown, hide it
-            if event.widget.winfo_toplevel() != self._toplevel:
+            if event.widget != self and event.widget.winfo_toplevel() != self._toplevel:
                 self.hide_listbox()
-
             # If click in listbox, select the highlighted value
             elif event.widget == self._listbox and self._highlighted_index >= 0:
                 self.select(self._listbox_values[self._highlighted_index])
@@ -261,10 +260,11 @@ class AutoCombobox(ttk.Combobox):
     def _motion_event(self, event: tk.Event) -> None:
         """Handle mouse movement"""
 
-        # Highlight option under mouse and remove highlight from the old one
-        index = self._listbox.index(f"@{event.x},{event.y}")
-        if self._highlighted_index != index:
-            self.change_highlight(index)
+        if self._is_posted:
+            # Highlight option under mouse and remove highlight from the old one
+            index = self._listbox.index(f"@{event.x},{event.y}")
+            if self._highlighted_index != index:
+                self.change_highlight(index)
 
     def _leave_event(self, event: tk.Event) -> None:
         """Handle mouse leaving listbox"""
@@ -319,3 +319,4 @@ class AutoCombobox(ttk.Combobox):
             self._filter: Callable[[tuple[str], str], list[int]] = value
         else:
             super().__setitem__(key, value)
+
