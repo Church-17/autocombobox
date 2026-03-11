@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "autocombobox"
 description = "Insert a Combobox into your GUI that allows suggestions based on what the user writes in"
-version = "1.5.1"
+version = "1.6.0"
 authors = [
     {name="Matteo Chiesa", email="matteo.chiesa.mc@gmail.com"}
 ]
