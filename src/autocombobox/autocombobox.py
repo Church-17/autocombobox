@@ -63,8 +63,7 @@ class AutoCombobox(ttk.Combobox):
         # - Handle mouse click
         self.bind_all("<Button-1>", self._click_event, '+')
         # - Handle keyboard typing to display coherent options
-        self.bind("<KeyRelease>", self._type_event)
-        self._toplevel.bind("<KeyRelease>", self._type_event)
+        self.bind_all("<KeyRelease>", self._type_event, '+')
         # - Handle window events
         self.winfo_toplevel().bind("<Configure>", self._window_event, '+')
         # Handle mouse movement to control highlight
@@ -223,8 +222,8 @@ class AutoCombobox(ttk.Combobox):
         """Handle keyboard typing"""
 
         if self._is_posted:
-            # Hide listbox when ESC pressed
-            if event.keysym == "Escape":
+            # Hide listbox when ESC or Tab pressed
+            if event.keysym == "Escape" or event.keysym == "Tab":
                 self.hide_listbox()
 
             # Select the highlighted option if is pressed enter
@@ -254,8 +253,9 @@ class AutoCombobox(ttk.Combobox):
                 self._prevent_leave = True
 
         # Show listbox if is not opened
-        elif event.char != "" or event.keysym == "Down" or event.keysym == "BackSpace" or event.keysym == "Return":
-            self.show_listbox()
+        elif event.widget == self:
+            elif event.char != "" or event.keysym == "Down" or event.keysym == "BackSpace" or event.keysym == "Return":
+                self.show_listbox()
 
     def _motion_event(self, event: tk.Event) -> None:
         """Handle mouse movement"""
@@ -319,4 +319,5 @@ class AutoCombobox(ttk.Combobox):
             self._filter: Callable[[tuple[str], str], list[int]] = value
         else:
             super().__setitem__(key, value)
+
 
