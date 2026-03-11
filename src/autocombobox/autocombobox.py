@@ -254,7 +254,7 @@ class AutoCombobox(ttk.Combobox):
 
         # Show listbox if is not opened
         elif event.widget == self:
-            elif event.char != "" or event.keysym == "Down" or event.keysym == "BackSpace" or event.keysym == "Return":
+            if event.char != "" or event.keysym == "Down" or event.keysym == "BackSpace" or event.keysym == "Return":
                 self.show_listbox()
 
     def _motion_event(self, event: tk.Event) -> None:
@@ -319,5 +319,6 @@ class AutoCombobox(ttk.Combobox):
             self._filter: Callable[[tuple[str], str], list[int]] = value
         else:
             super().__setitem__(key, value)
+
 
 
