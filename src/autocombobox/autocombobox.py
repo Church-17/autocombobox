@@ -214,12 +214,18 @@ class AutoCombobox(ttk.Combobox):
     def _window_event(self, event: tk.Event) -> None:
         """Handle window events"""
 
+        if not self.winfo_exists():
+            return
+
         # Hide listbox if user interact with the window
         if self._is_posted and event.widget == self.winfo_toplevel():
             self.hide_listbox()
 
     def _type_event(self, event: tk.Event) -> None:
         """Handle keyboard typing"""
+
+        if not self.winfo_exists():
+            return
 
         if self._is_posted:
             # Hide listbox when ESC or Tab pressed
