@@ -227,12 +227,12 @@ class AutoCombobox(ttk.Combobox):
             return
 
         if self._is_posted:
-            # Hide listbox when ESC or Tab pressed
-            if event.keysym == "Escape" or event.keysym == "Tab":
+            # Hide listbox when ESC or Tab pressed and nothing entered
+            if event.keysym == "Escape" or (event.keysym == "Tab" and not len(self.get())):
                 self.hide_listbox()
 
-            # Select the highlighted option if is pressed enter
-            elif event.keysym == "Return" and self._highlighted_index >= 0:
+            # Select the highlighted option if is pressed enter or Tab pressed and something entered
+            elif (event.keysym == "Return" or (event.keysym == "Tab" and len(self.get()))) and self._highlighted_index >= 0:
                 if 0 <= self._highlighted_index < self._listbox.size():
                     self.select(self._listbox_values[self._highlighted_index])
 
