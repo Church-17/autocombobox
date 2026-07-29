@@ -1,0 +1,7 @@
+line-length = 100
+
+[format]
+indent-style = "tab"
+quote-style = "double"
+skip-magic-trailing-comma = true
+line-ending = "lf"

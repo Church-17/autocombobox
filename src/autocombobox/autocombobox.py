@@ -8,326 +8,358 @@ NO_HIGHLIGHT = -1
 
 
 class AutoCombobox(ttk.Combobox):
-    """Autocompleting Combobox"""
+	"""Autocompleting Combobox"""
 
-    def __init__(self,
-            master = None,
-            filter: Callable[[tuple[str], str], list[int]] = default_filter,
-            **kwargs
-        ) -> None:
-        """
-        Create an Autocompleting Ttk Combobox. All the Ttk Combobox options are available.
-        
-        Use the parameter `filter` to pass the function for filtering the suggestions.
-        It must be a callable object that takes in this order the list of options and what the user writes,
-        and returns a list of integers indicates the position of each option, using a negative value to not show it.
-        
-        The default filter function shows all the options that starts with the user input
-        """
+	def __init__(
+		self, master=None, filter: Callable[[tuple[str], str], list[int]] = default_filter, **kwargs
+	) -> None:
+		"""
+		Create an Autocompleting Ttk Combobox. All the Ttk Combobox options are available.
 
-        # Interval variables
-        self._is_posted: bool = False
-        self._postcommand_done: bool = False
-        self._highlighted_index: int = NO_HIGHLIGHT
-        self._selected_str: str | None = None
-        self['postcommand'] = None
-        self['filter'] = filter
-        self._listbox_values: list[str] = []
+		Use the parameter `filter` to pass the function for filtering the suggestions.
+		It must be a callable object that takes in this order the list of options and what the user writes,
+		and returns a list of integers indicates the position of each option, using a negative value to not show it.
 
-        # Create Combobox
-        super().__init__(master, postcommand=self._postcommand)
-        self.configure(**kwargs)
+		The default filter function shows all the options that starts with the user input
+		"""
 
-        # Listbox toplevel
-        self._toplevel = tk.Toplevel(self)
-        self._toplevel.overrideredirect(True)
-        self._toplevel.columnconfigure(0, weight=1)
-        self._toplevel.rowconfigure(0, weight=1)
-        self._frame = ttk.Frame(self._toplevel, style="ComboboxPopdownFrame")
-        self._frame.grid(column=0, row=0, sticky="NSEW")
-        self._frame.columnconfigure(0, weight=1)
-        self._frame.rowconfigure(0, weight=1)
-        self._listbox = tk.Listbox(self._frame,
-            activestyle="none",
-            selectmode="browse",
-            exportselection=False,
-            **{k: self._retrieve_listbox_attr(k) for k in {"background", "bd", "bg", "border", "borderwidth", "cursor", "disabledforeground", "fg", "font", "foreground", "highlightbackground", "highlightcolor", "highlightthickness", "justify", "relief", "selectbackground", "selectborderwidth", "selectforeground"}}
-        )
-        self._scrollbar = ttk.Scrollbar(self._frame, command=self._listbox.yview)
-        self._listbox.configure(yscrollcommand = self._scrollbar.set)
+		# Interval variables
+		self._is_posted: bool = False
+		self._postcommand_done: bool = False
+		self._highlighted_index: int = NO_HIGHLIGHT
+		self._selected_str: str | None = None
+		self["postcommand"] = None
+		self["filter"] = filter
+		self._listbox_values: list[str] = []
 
-        # Events
-        # - Unbind keyboard down to not post original listbox
-        self.tk.eval(f"bind {self} <Down> break")
-        # - Handle mouse click
-        self.bind_all("<Button-1>", self._click_event, '+')
-        # - Handle keyboard typing to display coherent options
-        self.bind_all("<KeyRelease>", self._type_event, '+')
-        # - Handle window events
-        self.winfo_toplevel().bind("<Configure>", self._window_event, '+')
+		# Create Combobox
+		super().__init__(master, postcommand=self._postcommand)
+		self.configure(**kwargs)
 
-    def show_listbox(self) -> None:
-        """Open the Combobox popdown"""
+		# Listbox toplevel
+		self._toplevel = tk.Toplevel(self)
+		self._toplevel.overrideredirect(True)
+		self._toplevel.columnconfigure(0, weight=1)
+		self._toplevel.rowconfigure(0, weight=1)
+		self._frame = ttk.Frame(self._toplevel, style="ComboboxPopdownFrame")
+		self._frame.grid(column=0, row=0, sticky="NSEW")
+		self._frame.columnconfigure(0, weight=1)
+		self._frame.rowconfigure(0, weight=1)
+		self._listbox = tk.Listbox(
+			self._frame,
+			activestyle="none",
+			selectmode="browse",
+			exportselection=False,
+			**{
+				k: self._retrieve_listbox_attr(k)
+				for k in {
+					"background",
+					"bd",
+					"bg",
+					"border",
+					"borderwidth",
+					"cursor",
+					"disabledforeground",
+					"fg",
+					"font",
+					"foreground",
+					"highlightbackground",
+					"highlightcolor",
+					"highlightthickness",
+					"justify",
+					"relief",
+					"selectbackground",
+					"selectborderwidth",
+					"selectforeground",
+				}
+			},
+		)
+		self._scrollbar = ttk.Scrollbar(self._frame, command=self._listbox.yview)
+		self._listbox.configure(yscrollcommand=self._scrollbar.set)
 
-        # Execute user postcommand if there is one
-        if self._user_postcommand:
-            self._user_postcommand()
+		# Events
+		# - Unbind keyboard down to not post original listbox
+		self.tk.eval(f"bind {self} <Down> break")
+		# - Handle mouse click
+		self.bind_all("<Button-1>", self._click_event, "+")
+		# - Handle keyboard typing to display coherent options
+		self.bind_all("<KeyRelease>", self._type_event, "+")
+		# - Handle window events
+		self.winfo_toplevel().bind("<Configure>", self._window_event, "+")
 
-        # Show listbox toplevel
-        self._toplevel.manage(self._toplevel)
-        self._toplevel.lift()
-        
-        # If the current text is an option, reset listbox
-        if self.get() == self._selected_str:
-            self.update_values("")
+	def show_listbox(self) -> None:
+		"""Open the Combobox popdown"""
 
-        # If listbox empty, reset listbox & select text
-        elif len(self._listbox_values) == 0:
-            self.update_values("")
-            self.selection_range(0, "end")
-            self.icursor("end")
-        
-        # Else update listbox
-        else:
-            self.update_values()
+		# Execute user postcommand if there is one
+		if self._user_postcommand:
+			self._user_postcommand()
 
-        # If the selected option is in listbox, view it
-        if self._selected_str in self._listbox_values:
-            self._listbox.see(self._listbox_values.index(self._selected_str))
+		# Show listbox toplevel
+		self._toplevel.manage(self._toplevel)
+		self._toplevel.lift()
 
-        self._is_posted = True
-        
-        #Start tracking mouse movement
-        self.after(20, self._track_mouse_while_posted)
+		# If the current text is an option, reset listbox
+		if self.get() == self._selected_str:
+			self.update_values("")
 
-    def hide_listbox(self) -> None:
-        """Hide the Combobox popdown"""
+		# If listbox empty, reset listbox & select text
+		elif len(self._listbox_values) == 0:
+			self.update_values("")
+			self.selection_range(0, "end")
+			self.icursor("end")
 
-        # Reset highglight
-        self.change_highlight(NO_HIGHLIGHT)
+		# Else update listbox
+		else:
+			self.update_values()
 
-        # Hide listbox toplevel
-        self._toplevel.forget(self._toplevel)
-        self._is_posted = False
+		# If the selected option is in listbox, view it
+		if self._selected_str in self._listbox_values:
+			self._listbox.see(self._listbox_values.index(self._selected_str))
 
-    def update_values(self, text: str | None = None) -> None:
-        """Update listbox values to show coherent options"""
+		self._is_posted = True
 
-        # Check params
-        if text == None:
-            text = self.get()
-        elif not isinstance(text, str):
-            text = str(text)
+		# Start tracking mouse movement
+		self.after(20, self._track_mouse_while_posted)
 
-        # Change listbox values
-        indices = self._filter(self["values"], text)
-        assert len(indices) == len(self["values"]), "The length of the list returned by the filter function does not match the length of the values"
-        self._listbox_values = [opt for i, opt in sorted(zip(indices, self["values"])) if i >= 0]
-        self._listbox.delete(0, "end")
-        self._listbox.insert(0, *self._listbox_values)
+	def hide_listbox(self) -> None:
+		"""Hide the Combobox popdown"""
 
-        # Adapt listbox height and don't show scrollbar if it isn't needed
-        if self._listbox.size() <= int(self["height"]):
-            self._listbox.configure(height=self._listbox.size())
-            self._scrollbar.grid_forget()
-            self._listbox.grid(row=0, column=0, padx=1, pady=1, sticky="NSEW")
-        else:
-            self._listbox.configure(height=self["height"])
-            self._scrollbar.grid(row=0, column=1, padx=(0,1), pady=1, sticky="NS")
-            self._listbox.grid(row=0, column=0, padx=(1,0), pady=1, sticky="NSEW")
-        self._frame.update_idletasks()
-        self._toplevel.geometry(f"{self.winfo_width()}x{self._frame.winfo_reqheight()}+{self.winfo_rootx()}+{self.winfo_rooty()+self.winfo_height()}")
+		# Reset highglight
+		self.change_highlight(NO_HIGHLIGHT)
 
-        # Highlight selected option if it is in listbox
-        if self._selected_str in self._listbox_values:
-            self.change_highlight(self._listbox_values.index(self._selected_str))
-        elif self._listbox_values:
-            self.change_highlight(0)
-        else:
-            self.change_highlight(NO_HIGHLIGHT)
+		# Hide listbox toplevel
+		self._toplevel.forget(self._toplevel)
+		self._is_posted = False
 
-    def select(self, option: str) -> None:
-        """Select one of the possible options"""
+	def update_values(self, text: str | None = None) -> None:
+		"""Update listbox values to show coherent options"""
 
-        # Check params
-        if not isinstance(option, str):
-            option = str(option)
+		# Check params
+		if text == None:
+			text = self.get()
+		elif not isinstance(text, str):
+			text = str(text)
 
-        # Focus on Combobox
-        self.hide_listbox()
-        self.focus()
+		# Change listbox values
+		indices = self._filter(self["values"], text)
+		assert len(indices) == len(self["values"]), (
+			"The length of the list returned by the filter function does not match the length of the values"
+		)
+		self._listbox_values = [opt for i, opt in sorted(zip(indices, self["values"])) if i >= 0]
+		self._listbox.delete(0, "end")
+		self._listbox.insert(0, *self._listbox_values)
 
-        # Set Combobox on the given value
-        self.set(option)
-        self.icursor("end")
-        if option in self["values"]:
-            self._selected_str = option
-            self.selection_range(0, "end")
-            self.event_generate("<<ComboboxSelected>>")
+		# Adapt listbox height and don't show scrollbar if it isn't needed
+		if self._listbox.size() <= int(self["height"]):
+			self._listbox.configure(height=self._listbox.size())
+			self._scrollbar.grid_forget()
+			self._listbox.grid(row=0, column=0, padx=1, pady=1, sticky="NSEW")
+		else:
+			self._listbox.configure(height=self["height"])
+			self._scrollbar.grid(row=0, column=1, padx=(0, 1), pady=1, sticky="NS")
+			self._listbox.grid(row=0, column=0, padx=(1, 0), pady=1, sticky="NSEW")
+		self._frame.update_idletasks()
+		self._toplevel.geometry(
+			f"{self.winfo_width()}x{self._frame.winfo_reqheight()}+{self.winfo_rootx()}+{self.winfo_rooty() + self.winfo_height()}"
+		)
 
-    def change_highlight(self, index: int) -> None:
-        """Highlight the option corresponding to the given index and remove highlight from the old one"""
+		# Highlight selected option if it is in listbox
+		if self._selected_str in self._listbox_values:
+			self.change_highlight(self._listbox_values.index(self._selected_str))
+		elif self._listbox_values:
+			self.change_highlight(0)
+		else:
+			self.change_highlight(NO_HIGHLIGHT)
 
-        # Check params
-        if not isinstance(index, int):
-            index = int(index)
+	def select(self, option: str) -> None:
+		"""Select one of the possible options"""
 
-        # Remove previous highlight
-        self._listbox.selection_clear(0, "end")
+		# Check params
+		if not isinstance(option, str):
+			option = str(option)
 
-        # Add new highlight if valid index
-        if 0 <= index < self._listbox.size():
-            self._listbox.selection_set(index)
-            self._listbox.see(index)
-            self._highlighted_index = index
-        else:
-            self._highlighted_index = NO_HIGHLIGHT
+		# Focus on Combobox
+		self.hide_listbox()
+		self.focus()
 
-    def _click_event(self, event: tk.Event) -> None:
-        """Handle mouse click"""
+		# Set Combobox on the given value
+		self.set(option)
+		self.icursor("end")
+		if option in self["values"]:
+			self._selected_str = option
+			self.selection_range(0, "end")
+			self.event_generate("<<ComboboxSelected>>")
 
-        # Handle str event widget
-        if not isinstance(event.widget, tk.Misc):
-            self.hide_listbox()
-        
-        elif event.widget == self:
-            # If it's done also the postcommand, do nothing and reset vars
-            if self._postcommand_done:
-                self._postcommand_done = False
-            else:
-                # If click on Combobox and the listbox is already shown, update listbox
-                if self._is_posted:
-                    self.update_values()
-                # If click on Combobox and the listbox isn't shown, show it
-                else:
-                    self.show_listbox()
+	def change_highlight(self, index: int) -> None:
+		"""Highlight the option corresponding to the given index and remove highlight from the old one"""
 
-        elif self._is_posted:
-            # If click outside and the listbox is shown, hide it
-            if event.widget != self and event.widget.winfo_toplevel() != self._toplevel:
-                self.hide_listbox()
-            # If click in listbox, select the highlighted value
-            elif event.widget == self._listbox and self._highlighted_index >= 0:
-                self.select(self._listbox_values[self._highlighted_index])
+		# Check params
+		if not isinstance(index, int):
+			index = int(index)
 
-    def _window_event(self, event: tk.Event) -> None:
-        """Handle window events"""
+		# Remove previous highlight
+		self._listbox.selection_clear(0, "end")
 
-        if not self.winfo_exists():
-            return
+		# Add new highlight if valid index
+		if 0 <= index < self._listbox.size():
+			self._listbox.selection_set(index)
+			self._listbox.see(index)
+			self._highlighted_index = index
+		else:
+			self._highlighted_index = NO_HIGHLIGHT
 
-        # Hide listbox if user interact with the window
-        if self._is_posted and event.widget == self.winfo_toplevel():
-            self.hide_listbox()
+	def _click_event(self, event: tk.Event) -> None:
+		"""Handle mouse click"""
 
-    def _type_event(self, event: tk.Event) -> None:
-        """Handle keyboard typing"""
+		# Handle str event widget
+		if not isinstance(event.widget, tk.Misc):
+			self.hide_listbox()
 
-        if not self.winfo_exists():
-            return
+		elif event.widget == self:
+			# If it's done also the postcommand, do nothing and reset vars
+			if self._postcommand_done:
+				self._postcommand_done = False
+			else:
+				# If click on Combobox and the listbox is already shown, update listbox
+				if self._is_posted:
+					self.update_values()
+				# If click on Combobox and the listbox isn't shown, show it
+				else:
+					self.show_listbox()
 
-        if self._is_posted:
-            # Hide listbox when ESC or Tab pressed and nothing entered
-            if event.keysym == "Escape" or (event.keysym == "Tab" and not len(self.get())):
-                self.hide_listbox()
+		elif self._is_posted:
+			# If click outside and the listbox is shown, hide it
+			if event.widget != self and event.widget.winfo_toplevel() != self._toplevel:
+				self.hide_listbox()
+			# If click in listbox, select the highlighted value
+			elif event.widget == self._listbox and self._highlighted_index >= 0:
+				self.select(self._listbox_values[self._highlighted_index])
 
-            # Select the highlighted option if is pressed enter or Tab pressed and something entered
-            elif (event.keysym == "Return" or (event.keysym == "Tab" and len(self.get()))) and self._highlighted_index >= 0:
-                if 0 <= self._highlighted_index < self._listbox.size():
-                    self.select(self._listbox_values[self._highlighted_index])
+	def _window_event(self, event: tk.Event) -> None:
+		"""Handle window events"""
 
-            # If arrow pressed, move highlight
-            elif event.keysym == "Down":
-                if self._highlighted_index + 1 < self._listbox.size():
-                    self.change_highlight(self._highlighted_index + 1)
-            elif event.keysym == "Up":
-                if self._highlighted_index - 1 >= 0:
-                    self.change_highlight(self._highlighted_index - 1)
+		if not self.winfo_exists():
+			return
 
-            # If home pressed, highlight first option
-            elif event.keysym == "Home":
-                self.change_highlight(0)
+		# Hide listbox if user interact with the window
+		if self._is_posted and event.widget == self.winfo_toplevel():
+			self.hide_listbox()
 
-            # If end pressed, highlight last option
-            elif event.keysym == "End":
-                self.change_highlight(self._listbox.size()-1)
-            
-            # Filter options
-            else:
-                self.update_values()
-                self._prevent_leave = True
+	def _type_event(self, event: tk.Event) -> None:
+		"""Handle keyboard typing"""
 
-        # Show listbox if is not opened
-        elif event.widget == self:
-            if event.char != "" or event.keysym == "Down" or event.keysym == "BackSpace" or event.keysym == "Return":
-                self.show_listbox()
+		if not self.winfo_exists():
+			return
 
-    def _track_mouse_while_posted(self) -> None:
-        """Checks every 20 ms if the mouse is over the listbox while it is posted"""
+		if self._is_posted:
+			# Hide listbox when ESC or Tab pressed and nothing entered
+			if event.keysym == "Escape" or (event.keysym == "Tab" and not len(self.get())):
+				self.hide_listbox()
 
-        # Stop checking if the listbox is no longer posted
-        if not self._is_posted:
-            return
+			# Select the highlighted option if is pressed enter or Tab pressed and something entered
+			elif (
+				event.keysym == "Return" or (event.keysym == "Tab" and len(self.get()))
+			) and self._highlighted_index >= 0:
+				if 0 <= self._highlighted_index < self._listbox.size():
+					self.select(self._listbox_values[self._highlighted_index])
 
-        # Get x, y of mouse relative to the listbox
-        x, y = self.winfo_pointerxy()
-        x -= self._toplevel.winfo_rootx()
-        y -= self._toplevel.winfo_rooty()
+			# If arrow pressed, move highlight
+			elif event.keysym == "Down":
+				if self._highlighted_index + 1 < self._listbox.size():
+					self.change_highlight(self._highlighted_index + 1)
+			elif event.keysym == "Up":
+				if self._highlighted_index - 1 >= 0:
+					self.change_highlight(self._highlighted_index - 1)
 
-        # Don't change highlight while outside of listbox
-        if x < 0 or y < 0 or x > self._toplevel.winfo_width() or y > self._toplevel.winfo_height():
-            self.after(20, self._track_mouse_while_posted)
-            return
+			# If home pressed, highlight first option
+			elif event.keysym == "Home":
+				self.change_highlight(0)
 
-        # Get new index and change hightlight
-        index = self._listbox.index(f"@{x},{y}")
-        if self._highlighted_index != index:
-            self.change_highlight(index)
+			# If end pressed, highlight last option
+			elif event.keysym == "End":
+				self.change_highlight(self._listbox.size() - 1)
 
-        # Check again after 20 ms
-        self.after(20, self._track_mouse_while_posted)
+			# Filter options
+			else:
+				self.update_values()
+				self._prevent_leave = True
 
-    def _postcommand(self) -> None:
-        """Define new postcommand function to show only the new listbox and not the internal one"""
+		# Show listbox if is not opened
+		elif event.widget == self:
+			if (
+				event.char != ""
+				or event.keysym == "Down"
+				or event.keysym == "BackSpace"
+				or event.keysym == "Return"
+			):
+				self.show_listbox()
 
-        # Show or hide listbox
-        if self._is_posted:
-            self.hide_listbox()
-        else:
-            self.show_listbox()
-        self._postcommand_done = True
+	def _track_mouse_while_posted(self) -> None:
+		"""Checks every 20 ms if the mouse is over the listbox while it is posted"""
 
-        # Hide internal listbox
-        self.after(0, lambda: self.tk.call("ttk::combobox::Unpost", self))
+		# Stop checking if the listbox is no longer posted
+		if not self._is_posted:
+			return
 
-    def _retrieve_listbox_attr(self, attr: str) -> str:
-        """Function to retrieve attributes of Combobox Listbox"""
+		# Get x, y of mouse relative to the listbox
+		x, y = self.winfo_pointerxy()
+		x -= self._toplevel.winfo_rootx()
+		y -= self._toplevel.winfo_rooty()
 
-        return self.tk.eval(f'[ttk::combobox::PopdownWindow {self}].f.l cget -{attr}')
+		# Don't change highlight while outside of listbox
+		if x < 0 or y < 0 or x > self._toplevel.winfo_width() or y > self._toplevel.winfo_height():
+			self.after(20, self._track_mouse_while_posted)
+			return
 
-    # Methods to override to always handle parameters
+		# Get new index and change hightlight
+		index = self._listbox.index(f"@{x},{y}")
+		if self._highlighted_index != index:
+			self.change_highlight(index)
 
-    def configure(self, cnf = None, **kwargs):
+		# Check again after 20 ms
+		self.after(20, self._track_mouse_while_posted)
 
-        for param in {"postcommand", "filter"}:
-            self[param] = kwargs.pop(param, self[param])
+	def _postcommand(self) -> None:
+		"""Define new postcommand function to show only the new listbox and not the internal one"""
 
-        return super().configure(cnf, **kwargs)
+		# Show or hide listbox
+		if self._is_posted:
+			self.hide_listbox()
+		else:
+			self.show_listbox()
+		self._postcommand_done = True
 
-    config = configure
+		# Hide internal listbox
+		self.after(0, lambda: self.tk.call("ttk::combobox::Unpost", self))
 
-    def __getitem__(self, key) -> object:
-        if key == "postcommand":
-            return self._user_postcommand
-        elif key == "filter":
-            return self._filter
-        else:
-            return super().__getitem__(key)
+	def _retrieve_listbox_attr(self, attr: str) -> str:
+		"""Function to retrieve attributes of Combobox Listbox"""
 
-    def __setitem__(self, key, value) -> None:
-        if key == "postcommand":
-            self._user_postcommand: Callable[[], object] | None = value
-        elif key == "filter":
-            self._filter: Callable[[tuple[str], str], list[int]] = value
-        else:
-            super().__setitem__(key, value)
+		return self.tk.eval(f"[ttk::combobox::PopdownWindow {self}].f.l cget -{attr}")
+
+	# Methods to override to always handle parameters
+
+	def configure(self, cnf=None, **kwargs):
+
+		for param in {"postcommand", "filter"}:
+			self[param] = kwargs.pop(param, self[param])
+
+		return super().configure(cnf, **kwargs)
+
+	config = configure
+
+	def __getitem__(self, key) -> object:
+		if key == "postcommand":
+			return self._user_postcommand
+		elif key == "filter":
+			return self._filter
+		else:
+			return super().__getitem__(key)
+
+	def __setitem__(self, key, value) -> None:
+		if key == "postcommand":
+			self._user_postcommand: Callable[[], object] | None = value
+		elif key == "filter":
+			self._filter: Callable[[tuple[str], str], list[int]] = value
+		else:
+			super().__setitem__(key, value)
