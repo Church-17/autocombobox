@@ -265,26 +265,26 @@ class AutoCombobox(ttk.Combobox):
     def _track_mouse_while_posted(self) -> None:
         """Checks every 20 ms if the mouse is over the listbox while it is posted"""
 
-        #Stop checking if the listbox is no longer posted
+        # Stop checking if the listbox is no longer posted
         if not self._is_posted:
             return
 
-        #Get x, y of mouse relative to the listbox
+        # Get x, y of mouse relative to the listbox
         x, y = self.winfo_pointerxy()
         x -= self._toplevel.winfo_rootx()
         y -= self._toplevel.winfo_rooty()
 
-        #Don't change highlight while outside of listbox
+        # Don't change highlight while outside of listbox
         if x < 0 or y < 0 or x > self._toplevel.winfo_width() or y > self._toplevel.winfo_height():
             self.after(20, self._track_mouse_while_posted)
             return
 
-        #Get new index and change hightlight
+        # Get new index and change hightlight
         index = self._listbox.index(f"@{x},{y}")
         if self._highlighted_index != index:
             self.change_highlight(index)
 
-        #Check again after 20 ms
+        # Check again after 20 ms
         self.after(20, self._track_mouse_while_posted)
 
     def _postcommand(self) -> None:
