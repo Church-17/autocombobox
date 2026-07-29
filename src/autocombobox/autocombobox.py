@@ -28,7 +28,6 @@ class AutoCombobox(ttk.Combobox):
         # Interval variables
         self._is_posted: bool = False
         self._postcommand_done: bool = False
-        self._prevent_leave: bool = False
         self._highlighted_index: int = NO_HIGHLIGHT
         self._selected_str: str | None = None
         self['postcommand'] = None
@@ -66,9 +65,6 @@ class AutoCombobox(ttk.Combobox):
         self.bind_all("<KeyRelease>", self._type_event, '+')
         # - Handle window events
         self.winfo_toplevel().bind("<Configure>", self._window_event, '+')
-        # Handle mouse movement to control highlight
-        self._toplevel.bind("<Motion>", self._motion_event)
-        self._toplevel.bind("<Leave>", self._leave_event)
 
     def show_listbox(self) -> None:
         """Open the Combobox popdown"""
@@ -100,6 +96,9 @@ class AutoCombobox(ttk.Combobox):
             self._listbox.see(self._listbox_values.index(self._selected_str))
 
         self._is_posted = True
+        
+        #Start tracking mouse movement
+        self.after(20, self._track_mouse_while_posted)
 
     def hide_listbox(self) -> None:
         """Hide the Combobox popdown"""
@@ -214,6 +213,9 @@ class AutoCombobox(ttk.Combobox):
     def _window_event(self, event: tk.Event) -> None:
         """Handle window events"""
 
+        if not self.winfo_exists():
+            return
+
         # Hide listbox if user interact with the window
         if self._is_posted and event.widget == self.winfo_toplevel():
             self.hide_listbox()
@@ -221,13 +223,16 @@ class AutoCombobox(ttk.Combobox):
     def _type_event(self, event: tk.Event) -> None:
         """Handle keyboard typing"""
 
+        if not self.winfo_exists():
+            return
+
         if self._is_posted:
-            # Hide listbox when ESC or Tab pressed
-            if event.keysym == "Escape" or event.keysym == "Tab":
+            # Hide listbox when ESC or Tab pressed and nothing entered
+            if event.keysym == "Escape" or (event.keysym == "Tab" and not len(self.get())):
                 self.hide_listbox()
 
-            # Select the highlighted option if is pressed enter
-            elif event.keysym == "Return" and self._highlighted_index >= 0:
+            # Select the highlighted option if is pressed enter or Tab pressed and something entered
+            elif (event.keysym == "Return" or (event.keysym == "Tab" and len(self.get()))) and self._highlighted_index >= 0:
                 if 0 <= self._highlighted_index < self._listbox.size():
                     self.select(self._listbox_values[self._highlighted_index])
 
@@ -257,23 +262,30 @@ class AutoCombobox(ttk.Combobox):
             if event.char != "" or event.keysym == "Down" or event.keysym == "BackSpace" or event.keysym == "Return":
                 self.show_listbox()
 
-    def _motion_event(self, event: tk.Event) -> None:
-        """Handle mouse movement"""
+    def _track_mouse_while_posted(self) -> None:
+        """Checks every 20 ms if the mouse is over the listbox while it is posted"""
 
-        if self._is_posted:
-            # Highlight option under mouse and remove highlight from the old one
-            index = self._listbox.index(f"@{event.x},{event.y}")
-            if self._highlighted_index != index:
-                self.change_highlight(index)
+        #Stop checking if the listbox is no longer posted
+        if not self._is_posted:
+            return
 
-    def _leave_event(self, event: tk.Event) -> None:
-        """Handle mouse leaving listbox"""
+        #Get x, y of mouse relative to the listbox
+        x, y = self.winfo_pointerxy()
+        x -= self._toplevel.winfo_rootx()
+        y -= self._toplevel.winfo_rooty()
 
-        # Remove highlight when leave moving cursor
-        if self._prevent_leave:
-            self._prevent_leave = False
-        else:
-            self.change_highlight(NO_HIGHLIGHT)
+        #Don't change highlight while outside of listbox
+        if x < 0 or y < 0 or x > self._toplevel.winfo_width() or y > self._toplevel.winfo_height():
+            self.after(20, self._track_mouse_while_posted)
+            return
+
+        #Get new index and change hightlight
+        index = self._listbox.index(f"@{x},{y}")
+        if self._highlighted_index != index:
+            self.change_highlight(index)
+
+        #Check again after 20 ms
+        self.after(20, self._track_mouse_while_posted)
 
     def _postcommand(self) -> None:
         """Define new postcommand function to show only the new listbox and not the internal one"""
@@ -319,6 +331,3 @@ class AutoCombobox(ttk.Combobox):
             self._filter: Callable[[tuple[str], str], list[int]] = value
         else:
             super().__setitem__(key, value)
-
-
-
