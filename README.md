@@ -20,4 +20,4 @@ AutoCombobox makes available also various useful methods:
 - `show_listbox` and `hide_listbox` are the functions that manage the list of the Combobox options;
 - `update_values` takes an optional string and filters the list of all possible values based on it, to show only suggestions. If no strings is given, it is taken from the entry field;
 - `select` takes a string, and set the entry field with that. If the string is also in the possible value, it generate a `<<ComboboxSelected>>` event;
-- `change_highlight` takes the index of the option we want to highglights.
+- `change_highlight` takes the index of the option we want to hightlight.
