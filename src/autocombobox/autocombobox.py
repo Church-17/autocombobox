@@ -25,6 +25,8 @@ class AutoCombobox(ttk.Combobox):
 
 		# Interval variables
 		self._is_posted: bool = False
+		self._last_mouse_x: int = -1
+        self._last_mouse_y: int = -1
 		self._postcommand_done: bool = False
 		self._highlighted_index: int = NO_HIGHLIGHT
 		self._selected_str: str | None = None
@@ -305,6 +307,14 @@ class AutoCombobox(ttk.Combobox):
 		x, y = self.winfo_pointerxy()
 		x -= self._toplevel.winfo_rootx()
 		y -= self._toplevel.winfo_rooty()
+
+		#Don't change highlight if mouse wasn't moved
+        if x == self._last_mouse_x and y == self._last_mouse_y:
+            self.after(20, self._track_mouse_while_posted)
+            return
+
+        self._last_mouse_x = x
+        self._last_mouse_y = y
 
 		# Don't change highlight while outside of listbox
 		if x < 0 or y < 0 or x > self._toplevel.winfo_width() or y > self._toplevel.winfo_height():
