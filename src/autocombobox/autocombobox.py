@@ -6,27 +6,29 @@ from .filters import default_filter
 
 NO_HIGHLIGHT = -1
 
+
 def get_widget_from_event(event):
-    """Functions return the event widget if possible by stripping elements from the widget string (e.g. '.popdown')"""
-    widget = event.widget
+	"""Functions return the event widget if possible by stripping elements from the widget string (e.g. '.popdown')"""
+	widget = event.widget
 
-    if isinstance(widget, tk.Misc):
-        return widget
+	if isinstance(widget, tk.Misc):
+		return widget
 
-    while widget:
-        try:
-            return tk._default_root.nametowidget(widget)
-        except KeyError:
-            # Strip the last element off the path (e.g., '.f' or '.popdown')
-            if "." in widget:
-                widget = widget.rsplit(".", 1)[0]
-                # If we stripped down to empty string, it means we hit the root path '.'
-                if not widget: 
-                    widget = "."
-            else:
-                break
-                
-    return None
+	while widget:
+		try:
+			return tk._default_root.nametowidget(widget)
+		except KeyError:
+			# Strip the last element off the path (e.g., '.f' or '.popdown')
+			if "." in widget:
+				widget = widget.rsplit(".", 1)[0]
+				# If we stripped down to empty string, it means we hit the root path '.'
+				if not widget:
+					widget = "."
+			else:
+				break
+
+	return None
+
 
 class AutoCombobox(ttk.Combobox):
 	"""Autocompleting Combobox"""
@@ -236,8 +238,8 @@ class AutoCombobox(ttk.Combobox):
 
 		# Handle str event widget
 		widget = get_widget_from_event(event)
-        if not isinstance(widget, tk.Misc):
-            self.hide_listbox()
+		if not isinstance(widget, tk.Misc):
+			self.hide_listbox()
 
 		elif widget == self:
 			# If it's done also the postcommand, do nothing and reset vars
@@ -245,24 +247,29 @@ class AutoCombobox(ttk.Combobox):
 				self._postcommand_done = False
 			else:
 				# If click on Combobox and the listbox is already shown, update listbox
-                # Also make sure it's not the internal listbox
-                if isinstance(event.widget, tk.Misc):
-                    if self._is_posted: 
-                        self.update_values()
-                    # If click on Combobox and the listbox isn't shown, show it
-                    else:
-                        self.show_listbox()
+				# Also make sure it's not the internal listbox
+				if isinstance(event.widget, tk.Misc):
+					if self._is_posted:
+						self.update_values()
+					# If click on Combobox and the listbox isn't shown, show it
+					else:
+						self.show_listbox()
 
 		if self._is_posted:
-            # Handle the case where the internal listbox is the event widget
-            if widget == self and not isinstance(event.widget, tk.Misc) and ".popdown" in event.widget and self._highlighted_index >= 0:
-                self.select(self._listbox_values[self._highlighted_index])
-            # If click outside and the listbox is shown, hide it
-            elif widget != self and widget.winfo_toplevel() != self._toplevel:
-                self.hide_listbox()
-            # If click in listbox, select the highlighted value
-            elif widget == self._listbox and self._highlighted_index >= 0:
-                self.select(self._listbox_values[self._highlighted_index])
+			# Handle the case where the internal listbox is the event widget
+			if (
+				widget == self
+				and not isinstance(event.widget, tk.Misc)
+				and ".popdown" in event.widget
+				and self._highlighted_index >= 0
+			):
+				self.select(self._listbox_values[self._highlighted_index])
+			# If click outside and the listbox is shown, hide it
+			elif widget != self and widget.winfo_toplevel() != self._toplevel:
+				self.hide_listbox()
+			# If click in listbox, select the highlighted value
+			elif widget == self._listbox and self._highlighted_index >= 0:
+				self.select(self._listbox_values[self._highlighted_index])
 
 	def _window_event(self, event: tk.Event) -> None:
 		"""Handle window events"""
